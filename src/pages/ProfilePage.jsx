@@ -19,7 +19,10 @@ import {
   CheckCircle,
   AlertCircle
 } from 'lucide-react'
-import { useAuth } from '../App'
+import { useAuth } from '../hooks/use-auth.jsx'
+import { getUserProfile, getUserVehicles, updateUserProfile, addUserVehicle, deleteUserVehicle } from '../config/api'
+import { toast } from 'react-hot-toast'
+import { useAuth } from '../hooks/use-auth.jsx'
 
 const ProfilePage = () => {
   const { user } = useAuth()
@@ -35,33 +38,36 @@ const ProfilePage = () => {
 
   const loadProfile = async () => {
     try {
-      const token = localStorage.getItem('access_token')
+      setLoading(true)
       
-      // Carregar perfil
-      const profileResponse = await fetch('/api/v1/users/profile', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-      
-      if (profileResponse.ok) {
-        const profileData = await profileResponse.json()
-        setProfile(profileData.data)
+      // Carregar perfil usando a função da API
+      try {
+        const profileResponse = await getUserProfile()
+        if (profileResponse?.data?.success) {
+          setProfile(profileResponse.data.data)
+        }
+      } catch (profileError) {
+        console.error('Erro ao carregar perfil:', profileError)
+        toast.error('Erro ao carregar perfil do usuário')
       }
 
       // Carregar veículos se for motorista
       if (user?.user_type === 'driver') {
-        const vehiclesResponse = await fetch('/api/v1/users/vehicles', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        })
-        
-        if (vehiclesResponse.ok) {
-          const vehiclesData = await vehiclesResponse.json()
-          setVehicles(vehiclesData.data || [])
+        try {
+          const vehiclesResponse = await getUserVehicles()
+          if (vehiclesResponse?.data?.success) {
+            setVehicles(vehiclesResponse.data.data || [])
+          }
+        } catch (vehiclesError) {
+          console.error('Erro ao carregar veículos:', vehiclesError)
+          // Não mostrar toast para veículos pois pode ser que não tenha nenhum
         }
       }
-
-      setLoading(false)
+      
     } catch (error) {
-      console.error('Erro ao carregar perfil:', error)
+      console.error('Erro geral ao carregar perfil:', error)
+      toast.error('Erro ao carregar dados do perfil')
+    } finally {
       setLoading(false)
     }
   }
@@ -183,26 +189,26 @@ const ProfilePage = () => {
               <CardContent>
                 <div className="flex items-center space-x-4">
                   {profile.email_verified ? (
-                    <div className="flex items-center text-green-600">
+                    <div className="flex items-center text-blue-600">
                       <CheckCircle className="h-4 w-4 mr-1" />
                       Email verificado
                     </div>
                   ) : (
-                    <div className="flex items-center text-orange-600">
+                    <div className="flex items-center text-gray-600">
                       <AlertCircle className="h-4 w-4 mr-1" />
                       Email não verificado
                     </div>
                   )}
                   
                   {user?.user_type === 'company' && profile.company?.verified && (
-                    <div className="flex items-center text-green-600">
+                    <div className="flex items-center text-blue-600">
                       <CheckCircle className="h-4 w-4 mr-1" />
                       Empresa verificada
                     </div>
                   )}
                   
                   {user?.user_type === 'driver' && profile.driver?.verified && (
-                    <div className="flex items-center text-green-600">
+                    <div className="flex items-center text-blue-600">
                       <CheckCircle className="h-4 w-4 mr-1" />
                       Motorista verificado
                     </div>

@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom'
-import { useState, useEffect, createContext, useContext } from 'react'
-import { API_BASE_URL } from './config/api'
+import { AuthProvider, useAuth } from './hooks/use-auth.jsx'
+import { Toaster } from 'react-hot-toast'
 import './App.css'
 
 // Páginas
@@ -13,71 +13,11 @@ import AdminDashboard from './pages/AdminDashboard'
 import FreightDetails from './pages/FreightDetails'
 import ProfilePage from './pages/ProfilePage'
 
-// Context para autenticação
-const AuthContext = createContext()
-
-export const useAuth = () => {
-  const context = useContext(AuthContext)
-  if (!context) {
-    throw new Error('useAuth deve ser usado dentro de AuthProvider')
-  }
-  return context
-}
-
-// Provider de autenticação
-const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    // Verificar se há token salvo
-    const token = localStorage.getItem('token')
-    const userData = localStorage.getItem('user')
-    
-    if (token && userData) {
-      try {
-        setUser(JSON.parse(userData))
-      } catch (error) {
-        console.error('Erro ao carregar dados do usuário:', error)
-        localStorage.removeItem('token')
-        localStorage.removeItem('user')
-      }
-    }
-    
-    setLoading(false)
-  }, [])
-
-  const login = (userData, token) => {
-    setUser(userData)
-    localStorage.setItem('token', token)
-    localStorage.setItem('user', JSON.stringify(userData))
-  }
-
-  const logout = () => {
-    setUser(null)
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
-  }
-
-  const value = {
-    user,
-    login,
-    logout,
-    loading
-  }
-
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  )
-}
-
 // Componente de rota protegida
 const ProtectedRoute = ({ children, requiredUserType = null }) => {
-  const { user, loading } = useAuth()
+  const { user, isLoading } = useAuth()
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
@@ -96,54 +36,11 @@ const ProtectedRoute = ({ children, requiredUserType = null }) => {
   return children
 }
 
-// Header da aplicação
-const AppHeader = () => {
-  const { user, logout } = useAuth()
-
-  if (!user) return null
-
-  return (
-    <header className="bg-white shadow-sm border-b">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center py-4">
-          <Link to="/" className="flex items-center">
-            <img 
-              src="/logo-starfrete-transport-2.png" 
-              alt="StarFrete" 
-              className="h-8 w-auto mr-3"
-            />
-            <h1 className="text-xl font-bold text-blue-600">StarFrete</h1>
-          </Link>
-          
-          <nav className="flex items-center space-x-4">
-            <span className="text-gray-600">
-              Olá, {user.company?.name || user.driver?.name || user.email}
-            </span>
-            <Link 
-              to="/profile" 
-              className="text-blue-600 hover:text-blue-800"
-            >
-              Perfil
-            </Link>
-            <button 
-              onClick={logout}
-              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm"
-            >
-              Sair
-            </button>
-          </nav>
-        </div>
-      </div>
-    </header>
-  )
-}
-
 function App() {
   return (
     <AuthProvider>
       <Router>
         <div className="App">
-          <AppHeader />
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
@@ -201,6 +98,18 @@ function App() {
             {/* Rota padrão */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+          
+          {/* Toast Container */}
+          <Toaster 
+            position="top-right"
+            toastOptions={{
+              duration: 4000,
+              style: {
+                background: '#363636',
+                color: '#fff',
+              },
+            }}
+          />
         </div>
       </Router>
     </AuthProvider>

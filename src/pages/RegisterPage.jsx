@@ -1,11 +1,14 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link } from 'react-router-dom' 
 import axios from 'axios'
-import { API_BASE_URL } from '../config/api'
+import { API_BASE_URL } from '../config/api';
+
 
 export default function RegisterPage() {
   const [userType, setUserType] = useState('company')
-  const [formData, setFormData] = useState({
+  
+  // Estados separados para empresa e motorista
+  const [companyData, setCompanyData] = useState({
     name: '',
     email: '',
     password: '',
@@ -16,7 +19,15 @@ export default function RegisterPage() {
       phone: '',
       address: '',
       contact_person: ''
-    },
+    }
+  })
+  
+  const [driverData, setDriverData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    type: 'driver',
     driver: {
       cpf: '',
       phone: '',
@@ -26,14 +37,31 @@ export default function RegisterPage() {
       address: ''
     }
   })
+  
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [isTrialMode, setIsTrialMode] = useState(false)
+
+  // Função para obter os dados ativos baseado no tipo de usuário
+  const getActiveFormData = () => {
+    return userType === 'company' ? companyData : driverData
+  }
+
+  // Função para atualizar os dados baseado no tipo de usuário
+  const setActiveFormData = (updateFn) => {
+    if (userType === 'company') {
+      setCompanyData(updateFn)
+    } else {
+      setDriverData(updateFn)
+    }
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
     setMessage('')
+
+    const formData = getActiveFormData()
 
     if (formData.password !== formData.confirmPassword) {
       setMessage('As senhas não coincidem')
@@ -70,41 +98,79 @@ export default function RegisterPage() {
       const response = await axios.post(`${API_BASE_URL}${endpoint}`, payload)
       
       if (response.data.success) {
-        if (isTrialMode) {
-          setMessage('Teste grátis iniciado! Redirecionando...')
-          // Salvar token e redirecionar
-          localStorage.setItem('token', response.data.data.access_token)
-          localStorage.setItem('user', JSON.stringify(response.data.data.user))
-          setTimeout(() => {
-            window.location.href = '/company/dashboard'
-          }, 2000)
-        } else {
-          setMessage(response.data.message)
-        }
+        setMessage(response.data.message || 'Cadastro realizado com sucesso! Aguarde aprovação da equipe.')
+        
+        // Limpar todos os campos após registro bem-sucedido
+        setCompanyData({
+          name: '',
+          email: '',
+          password: '',
+          confirmPassword: '',
+          type: 'company',
+          company: {
+            cnpj: '',
+            phone: '',
+            address: '',
+            contact_person: ''
+          }
+        })
+        setDriverData({
+          name: '',
+          email: '',
+          password: '',
+          confirmPassword: '',
+          type: 'driver',
+          driver: {
+            cpf: '',
+            phone: '',
+            cnh: '',
+            cnh_category: '',
+            cnh_expiry: '',
+            address: ''
+          }
+        })
       }
     } catch (error) {
+      console.error('Erro no registro:', error)
       setMessage(error.response?.data?.message || 'Erro ao realizar cadastro')
     } finally {
       setLoading(false)
     }
   }
 
+  // Função de input atualizada para tratar limites e campos numéricos
   const handleInputChange = (e) => {
     const { name, value } = e.target
+    let processedValue = value;
+
+    // Lista de campos que devem conter apenas números
+    const numericFields = [
+      'company.cnpj',
+      'driver.cpf',
+      'company.phone',
+      'driver.phone',
+      'driver.cnh'
+    ];
+
+    // Se o campo for numérico, remove todos os caracteres não-dígitos
+    if (numericFields.includes(name)) {
+      processedValue = value.replace(/\D/g, '');
+    }
     
+    // Atualiza o estado correspondente
     if (name.includes('.')) {
       const [section, field] = name.split('.')
-      setFormData(prev => ({
+      setActiveFormData(prev => ({
         ...prev,
         [section]: {
           ...prev[section],
-          [field]: value
+          [field]: processedValue
         }
       }))
     } else {
-      setFormData(prev => ({
+      setActiveFormData(prev => ({
         ...prev,
-        [name]: value
+        [name]: processedValue
       }))
     }
   }
@@ -139,10 +205,7 @@ export default function RegisterPage() {
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
-                onClick={() => {
-                  setUserType('company')
-                  setFormData(prev => ({ ...prev, type: 'company' }))
-                }}
+                onClick={() => setUserType('company')}
                 className={`p-4 border-2 rounded-lg text-center transition-all ${
                   userType === 'company'
                     ? 'border-blue-600 bg-blue-50 text-blue-600'
@@ -154,10 +217,7 @@ export default function RegisterPage() {
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  setUserType('driver')
-                  setFormData(prev => ({ ...prev, type: 'driver' }))
-                }}
+                onClick={() => setUserType('driver')}
                 className={`p-4 border-2 rounded-lg text-center transition-all ${
                   userType === 'driver'
                     ? 'border-blue-600 bg-blue-50 text-blue-600'
@@ -214,7 +274,8 @@ export default function RegisterPage() {
                 name="name"
                 type="text"
                 required
-                value={formData.name}
+                maxLength="100"
+                value={getActiveFormData().name}
                 onChange={handleInputChange}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Seu nome completo"
@@ -230,7 +291,8 @@ export default function RegisterPage() {
                 name="email"
                 type="email"
                 required
-                value={formData.email}
+                maxLength="150"
+                value={getActiveFormData().email}
                 onChange={handleInputChange}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 placeholder="seu@email.com"
@@ -246,7 +308,8 @@ export default function RegisterPage() {
                 name="password"
                 type="password"
                 required
-                value={formData.password}
+                maxLength="50"
+                value={getActiveFormData().password}
                 onChange={handleInputChange}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Sua senha"
@@ -262,7 +325,8 @@ export default function RegisterPage() {
                 name="confirmPassword"
                 type="password"
                 required
-                value={formData.confirmPassword}
+                maxLength="50"
+                value={getActiveFormData().confirmPassword}
                 onChange={handleInputChange}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Confirme sua senha"
@@ -283,11 +347,13 @@ export default function RegisterPage() {
                   id="company.cnpj"
                   name="company.cnpj"
                   type="text"
+                  inputMode="numeric"
                   required
-                  value={formData.company.cnpj}
+                  maxLength="14"
+                  value={getActiveFormData().company.cnpj}
                   onChange={handleInputChange}
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="00.000.000/0000-00"
+                  placeholder="Apenas números"
                 />
               </div>
 
@@ -299,11 +365,13 @@ export default function RegisterPage() {
                   id="company.phone"
                   name="company.phone"
                   type="tel"
+                  inputMode="numeric"
                   required
-                  value={formData.company.phone}
+                  maxLength="11"
+                  value={getActiveFormData().company.phone}
                   onChange={handleInputChange}
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="(11) 99999-9999"
+                  placeholder="Apenas números (DDD + número)"
                 />
               </div>
 
@@ -315,7 +383,8 @@ export default function RegisterPage() {
                   id="company.address"
                   name="company.address"
                   required
-                  value={formData.company.address}
+                  maxLength="255"
+                  value={getActiveFormData().company.address}
                   onChange={handleInputChange}
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   placeholder="Rua, número, bairro, cidade, estado"
@@ -332,7 +401,8 @@ export default function RegisterPage() {
                   name="company.contact_person"
                   type="text"
                   required
-                  value={formData.company.contact_person}
+                  maxLength="100"
+                  value={getActiveFormData().company.contact_person}
                   onChange={handleInputChange}
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   placeholder="Nome do responsável"
@@ -354,11 +424,13 @@ export default function RegisterPage() {
                   id="driver.cpf"
                   name="driver.cpf"
                   type="text"
+                  inputMode="numeric"
                   required
-                  value={formData.driver.cpf}
+                  maxLength="11"
+                  value={getActiveFormData().driver.cpf}
                   onChange={handleInputChange}
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="000.000.000-00"
+                  placeholder="Apenas números"
                 />
               </div>
 
@@ -370,11 +442,13 @@ export default function RegisterPage() {
                   id="driver.phone"
                   name="driver.phone"
                   type="tel"
+                  inputMode="numeric"
                   required
-                  value={formData.driver.phone}
+                  maxLength="11"
+                  value={getActiveFormData().driver.phone}
                   onChange={handleInputChange}
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="(11) 99999-9999"
+                  placeholder="Apenas números (DDD + número)"
                 />
               </div>
 
@@ -386,11 +460,13 @@ export default function RegisterPage() {
                   id="driver.cnh"
                   name="driver.cnh"
                   type="text"
+                  inputMode="numeric"
                   required
-                  value={formData.driver.cnh}
+                  maxLength="11"
+                  value={getActiveFormData().driver.cnh}
                   onChange={handleInputChange}
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Número da CNH"
+                  placeholder="Apenas números"
                 />
               </div>
 
@@ -402,7 +478,7 @@ export default function RegisterPage() {
                   id="driver.cnh_category"
                   name="driver.cnh_category"
                   required
-                  value={formData.driver.cnh_category}
+                  value={getActiveFormData().driver.cnh_category}
                   onChange={handleInputChange}
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 >
@@ -424,7 +500,7 @@ export default function RegisterPage() {
                   name="driver.cnh_expiry"
                   type="date"
                   required
-                  value={formData.driver.cnh_expiry}
+                  value={getActiveFormData().driver.cnh_expiry}
                   onChange={handleInputChange}
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 />
@@ -438,7 +514,8 @@ export default function RegisterPage() {
                   id="driver.address"
                   name="driver.address"
                   required
-                  value={formData.driver.address}
+                  maxLength="255"
+                  value={getActiveFormData().driver.address}
                   onChange={handleInputChange}
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   placeholder="Rua, número, bairro, cidade, estado"
@@ -450,7 +527,7 @@ export default function RegisterPage() {
 
           {message && (
             <div className={`p-3 rounded-md ${
-              message.includes('sucesso') || message.includes('Aguarde') 
+              message.includes('sucesso') || message.includes('Redirecionando') 
                 ? 'bg-green-100 text-green-700' 
                 : 'bg-red-100 text-red-700'
             }`}>
@@ -480,4 +557,3 @@ export default function RegisterPage() {
     </div>
   );
 }
-
