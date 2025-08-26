@@ -1,4 +1,5 @@
 import { useOptimizedData } from './use-optimized-data'
+import { useCallback } from 'react'
 import { 
   listFreights, 
   getCompanyFreights,
@@ -76,17 +77,20 @@ export const useDriverDashboard = () => {
   const vehiclesResult = useUserVehicles()
   const interestsResult = useMyInterests()
 
+  // Usar useCallback para evitar recriação da função refresh
+  const refresh = useCallback(() => {
+    freightsResult.refresh()
+    vehiclesResult.refresh()
+    interestsResult.refresh()
+  }, [freightsResult.refresh, vehiclesResult.refresh, interestsResult.refresh])
+
   return {
     freights: freightsResult.data || [],
     vehicles: vehiclesResult.data || [],
     interests: interestsResult.data || [],
     loading: freightsResult.loading || vehiclesResult.loading || interestsResult.loading,
     error: freightsResult.error || vehiclesResult.error || interestsResult.error,
-    refresh: () => {
-      freightsResult.refresh()
-      vehiclesResult.refresh()
-      interestsResult.refresh()
-    }
+    refresh
   }
 }
 
@@ -109,15 +113,18 @@ export const useCompanyDashboard = () => {
     ...rawStats
   }
 
+  // Usar useCallback para evitar recriação da função refresh
+  const refresh = useCallback(() => {
+    freightsResult.refresh()
+    statsResult.refresh()
+  }, [freightsResult.refresh, statsResult.refresh])
+
   return {
     freights,
     stats,
     loading: freightsResult.loading || statsResult.loading,
     error: freightsResult.error || statsResult.error,
-    refresh: () => {
-      freightsResult.refresh()
-      statsResult.refresh()
-    }
+    refresh
   }
 }
 
@@ -137,14 +144,17 @@ export const useAdminDashboard = () => {
     options: { cacheDuration: 30000 } // Cache por 30 segundos
   })
 
+  // Usar useCallback para evitar recriação da função refresh
+  const refresh = useCallback(() => {
+    statsResult.refresh()
+    usersResult.refresh()
+  }, [statsResult.refresh, usersResult.refresh])
+
   return {
     stats: statsResult.data || {},
     users: usersResult.data || [],
     loading: statsResult.loading || usersResult.loading,
     error: statsResult.error || usersResult.error,
-    refresh: () => {
-      statsResult.refresh()
-      usersResult.refresh()
-    }
+    refresh
   }
 }

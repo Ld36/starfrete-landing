@@ -7,6 +7,8 @@ import './App.css'
 import LandingPage from './pages/LandingPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
+import NewLoginPage from './pages/NewLoginPage'
+import NewRegisterPage from './pages/NewRegisterPage'
 import CompanyDashboard from './pages/CompanyDashboard'
 import DriverDashboard from './pages/DriverDashboard'
 import AdminDashboard from './pages/AdminDashboard'
@@ -43,8 +45,12 @@ function App() {
         <div className="App">
           <Routes>
             <Route path="/" element={<LandingPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/login" element={<NewLoginPage />} />
+            <Route path="/register" element={<NewRegisterPage />} />
+            
+            {/* Rotas antigas (manter por compatibilidade) */}
+            <Route path="/old-login" element={<LoginPage />} />
+            <Route path="/old-register" element={<RegisterPage />} />
             
             {/* Rotas protegidas para empresas */}
             <Route 

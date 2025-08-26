@@ -12,36 +12,12 @@ import {
   ArrowRight,
   MapPin,
 } from "lucide-react";
-import { useAuth } from "../hooks/use-auth.jsx";
 import { useEffect, useState } from "react";
 import { useNavigate } from 'react-router-dom';
 import logoStarfrete from '../assets/logo_starfrete.png'; // Logo StarFrete
 
 export default function LandingPage() {
-  const { user, isLoading } = useAuth();
   const navigate = useNavigate();
-  const [shouldCheckAuth, setShouldCheckAuth] = useState(false);
-
-  // Só verifica autenticação quando necessário
-  useEffect(() => {
-    const token = localStorage.getItem('authToken');
-    if (token) {
-      setShouldCheckAuth(true);
-    }
-  }, []);
-
-  // Redirecionamento baseado no tipo de usuário
-  useEffect(() => {
-    if (shouldCheckAuth && !isLoading && user && user.userType) {
-      if (user.userType === "company" || user.role === "company") {
-        navigate("/company/dashboard");
-      } else if (user.userType === "driver" || user.role === "driver") {
-        navigate("/driver/dashboard");
-      } else if (user.userType === "admin" || user.role === "admin") {
-        navigate("/admin/dashboard");
-      }
-    }
-  }, [user, isLoading, navigate]);
 
   const features = [
     {

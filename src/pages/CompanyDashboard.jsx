@@ -107,7 +107,7 @@ const CompanyDashboard = () => {
     if (user) {
       refresh()
     }
-  }, [user, refresh])
+  }, [user]) // Removendo 'refresh' para evitar loops infinitos
 
   const loadDashboardData = async () => {
     return refresh()

@@ -22,7 +22,6 @@ import {
 import { useAuth } from '../hooks/use-auth.jsx'
 import { getUserProfile, getUserVehicles, updateUserProfile, addUserVehicle, deleteUserVehicle } from '../config/api'
 import { toast } from 'react-hot-toast'
-import { useAuth } from '../hooks/use-auth.jsx'
 
 const ProfilePage = () => {
   const { user } = useAuth()
