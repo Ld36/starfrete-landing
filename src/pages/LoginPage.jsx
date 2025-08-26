@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../App'
+import { useNavigate, Link } from 'react-router-dom'
+import { useAuth } from '../hooks/use-auth.jsx'
 import { login } from '../config/api'
 
 const LoginPage = () => {

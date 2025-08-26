@@ -1,16 +1,24 @@
 import { useState, useEffect } from 'react';
-import { API_BASE_URL } from '../config/api';
+import { useAdminDashboard } from '../hooks/use-data-hooks.js';
+import { 
+  getAdminStats,
+  getAdminUsers,
+  approveUser,
+  suspendUser,
+  activateUser
+} from '../config/api';
 
 const AdminDashboard = () => {
+  // Usar hook otimizado para dados principais
+  const { stats, users, loading: dataLoading, refresh } = useAdminDashboard()
+  
   const [activeTab, setActiveTab] = useState('overview');
-  const [stats, setStats] = useState({});
-  const [users, setUsers] = useState([]);
   const [subscriptions, setSubscriptions] = useState([]);
   const [tickets, setTickets] = useState([]);
   const [staff, setStaff] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [permissions, setPermissions] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [ticketMessages, setTicketMessages] = useState([]);
   const [replyMessage, setReplyMessage] = useState('');
@@ -28,71 +36,13 @@ const AdminDashboard = () => {
   });
 
   useEffect(() => {
-    loadDashboardData();
+    refresh();
     loadDepartments();
     loadPermissions();
-  }, []);
+  }, [refresh]);
 
   const loadDashboardData = async () => {
-    try {
-      const token = localStorage.getItem('access_token');
-      const headers = { 
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      };
-
-      // Carregar estatísticas
-      try {
-        const statsResponse = await fetch(`${API_BASE_URL}/api/v1/admin/stats`, { headers });
-        if (statsResponse.ok) {
-          const statsData = await statsResponse.json();
-          setStats(statsData.data);
-        }
-      } catch (error) {
-        console.log('Endpoint de stats não encontrado:', error);
-      }
-
-      // Carregar usuários pendentes
-      try {
-        const usersResponse = await fetch(`${API_BASE_URL}/api/v1/admin/users`, { headers });
-        if (usersResponse.ok) {
-          const usersData = await usersResponse.json();
-          console.log('Usuários carregados:', usersData);
-          setUsers(usersData.data || usersData);
-        } else {
-          console.log('Erro ao carregar usuários:', usersResponse.status);
-        }
-      } catch (error) {
-        console.error('Erro ao carregar usuários:', error);
-      }
-
-      // Carregar assinaturas
-      try {
-        const subsResponse = await fetch(`${API_BASE_URL}/api/v1/admin/subscriptions`, { headers });
-        if (subsResponse.ok) {
-          const subsData = await subsResponse.json();
-          setSubscriptions(subsData.data || subsData);
-        }
-      } catch (error) {
-        console.log('Endpoint de assinaturas não encontrado:', error);
-      }
-
-      // Carregar fretes (se disponível)
-      try {
-        const freightsResponse = await fetch(`${API_BASE_URL}/api/v1/freights`, { headers });
-        if (freightsResponse.ok) {
-          const freightsData = await freightsResponse.json();
-          console.log('Fretes carregados:', freightsData);
-        }
-      } catch (error) {
-        console.log('Endpoint de fretes não encontrado:', error);
-      }
-
-      setLoading(false);
-    } catch (error) {
-      console.error('Erro ao carregar dados:', error);
-      setLoading(false);
-    }
+    return refresh()
   };
 
   const loadDepartments = async () => {
@@ -125,27 +75,31 @@ const AdminDashboard = () => {
     }
   };
 
-  const approveUser = async (userId) => {
+  const handleApproveUser = async (userId) => {
     try {
-      const token = localStorage.getItem('access_token');
-      const response = await fetch(`${API_BASE_URL}/api/v1/admin/users/${userId}/approve`, {
-        method: 'POST',
-        headers: { 
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.ok) {
-        alert('Usuário aprovado com sucesso!');
-        loadDashboardData(); // Recarregar dados
-      } else {
-        const errorData = await response.json();
-        alert('Erro ao aprovar usuário: ' + (errorData.message || 'Erro desconhecido'));
+      const response = await approveUser(userId);
+      
+      if (response.data.success) {
+        window.showToast?.('Usuário aprovado com sucesso!', 'success');
+        refresh();
       }
     } catch (error) {
-      console.error('Erro:', error);
-      alert('Erro ao aprovar usuário: ' + error.message);
+      console.error('Erro ao aprovar usuário:', error);
+      window.showToast?.('Erro ao aprovar usuário: ' + (error.response?.data?.message || error.message), 'error');
+    }
+  };
+
+  const handleSuspendUser = async (userId) => {
+    try {
+      const response = await suspendUser(userId);
+      
+      if (response.data.success) {
+        window.showToast?.('Usuário suspenso com sucesso!', 'success');
+        refresh();
+      }
+    } catch (error) {
+      console.error('Erro ao suspender usuário:', error);
+      window.showToast?.('Erro ao suspender usuário: ' + (error.response?.data?.message || error.message), 'error');
     }
   };
 
@@ -159,7 +113,7 @@ const AdminDashboard = () => {
 
       if (response.ok) {
         alert('Usuário suspenso com sucesso!');
-        loadDashboardData();
+        refresh();
       } else {
         alert('Erro ao suspender usuário');
       }
@@ -183,7 +137,7 @@ const AdminDashboard = () => {
 
       if (response.ok) {
         alert(`Assinatura renovada por ${days} dias!`);
-        loadDashboardData();
+        refresh();
       } else {
         alert('Erro ao renovar assinatura');
       }
@@ -363,7 +317,7 @@ const AdminDashboard = () => {
     }
   };
 
-  if (loading) {
+  if (loading || dataLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -464,7 +418,7 @@ const AdminDashboard = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="bg-white p-6 rounded-lg shadow">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Receita Mensal</h3>
-                <p className="text-2xl font-bold text-yellow-600">
+                <p className="text-2xl font-bold text-blue-600">
                   R$ {(stats.monthly_revenue || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </p>
                 <p className="text-sm text-gray-500 mt-1">
@@ -530,7 +484,7 @@ const AdminDashboard = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                         <button
-                          onClick={() => approveUser(user.id)}
+                          onClick={() => handleApproveUser(user.id)}
                           className="text-green-600 hover:text-green-900"
                         >
                           Aprovar
@@ -594,7 +548,7 @@ const AdminDashboard = () => {
                             : 'bg-red-100 text-red-800'
                         }`}>
                           {subscription.status === 'active' ? 'Ativa' : 
-                           subscription.status === 'pending' ? 'Pendente' : 'Inativa'}
+                            subscription.status === 'pending' ? 'Pendente' : 'Inativa'}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -656,7 +610,7 @@ const AdminDashboard = () => {
                           : 'bg-green-100 text-green-800'
                       }`}>
                         {ticket.status === 'open' ? 'Aberto' : 
-                         ticket.status === 'in_progress' ? 'Em Andamento' : 'Resolvido'}
+                          ticket.status === 'in_progress' ? 'Em Andamento' : 'Resolvido'}
                       </span>
                     </div>
                   </div>
@@ -776,8 +730,8 @@ const AdminDashboard = () => {
                             'bg-yellow-100 text-yellow-800'
                           }`}>
                             {member.department === 'admin' ? 'Administração' :
-                             member.department === 'financial' ? 'Financeiro' :
-                             member.department === 'approval' ? 'Aprovação' : 'Suporte'}
+                              member.department === 'financial' ? 'Financeiro' :
+                              member.department === 'approval' ? 'Aprovação' : 'Suporte'}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -995,4 +949,3 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
-
