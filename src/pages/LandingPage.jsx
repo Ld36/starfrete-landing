@@ -61,12 +61,13 @@ export default function LandingPage() {
     <div className="min-h-screen flex flex-col">
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center">
+          <div className="flex items-center space-x-3">
             <img
-              src="/logo-starfrete-1.png"
+              src="/logo3.png"
               alt="StarFrete Logo"
-              className="h-16 w-auto"
+              className="h-12 w-auto"
             />
+            <span className="text-2xl font-bold text-blue-600">StarFrete</span>
           </div>
 
           <nav className="hidden md:flex space-x-8">
@@ -288,7 +289,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
               <img
-                src="/logo-starfrete-1.png"
+                src="/logo3.png"
                 alt="StarFrete Logo"
                 className="h-16 w-auto mb-4 brightness-0 invert"
               />
