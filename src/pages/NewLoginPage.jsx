@@ -64,7 +64,7 @@ export default function NewLoginPage() {
       console.log("Usuário autenticado:", user);
       
       if (user.user_type === "company") {
-        navigate("/company/dashboard");
+        navigate("/company-dashboard");
       } else if (user.user_type === "admin") {
         navigate("/admin/dashboard");
       } else if (user.user_type === "driver") {
@@ -167,7 +167,7 @@ export default function NewLoginPage() {
           console.log("Tipo de usuário para redirecionamento:", userType);
           
           if (userType === 'company') {
-            navigate('/company/dashboard');
+            navigate('/company-dashboard');
           } else if (userType === 'driver') {
             navigate('/driver/dashboard');
           } else if (userType === 'admin') {

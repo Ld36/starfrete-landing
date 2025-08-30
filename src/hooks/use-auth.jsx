@@ -19,21 +19,26 @@ export const AuthProvider = ({ children }) => {
             const parsedUserData = JSON.parse(userData);
             setUser(parsedUserData);
             
-            // Só faz request ao servidor se necessário (opcional)
-            // Para melhor performance, removemos a validação automática
+            // Depois tenta validar com a API (opcional)
+            try {
+              const validatedUserData = await getUserProfile();
+              if (validatedUserData.data && validatedUserData.data.success) {
+                setUser(validatedUserData.data.user);
+              }
+            } catch (apiError) {
+              // Se falhar na validação da API, mantém os dados locais
+              console.warn('API validation failed, using cached user data:', apiError);
+            }
           } catch (parseError) {
-            console.error('Erro ao fazer parse dos dados do usuário:', parseError);
-            localStorage.removeItem('authToken');
+            console.error('Error parsing user data:', parseError);
             localStorage.removeItem('userData');
+            localStorage.removeItem('authToken');
           }
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
-        // Só remove token em caso de erro crítico
-        if (error.response && error.response.status === 401) {
-          localStorage.removeItem('authToken');
-          localStorage.removeItem('userData');
-        }
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userData');
       } finally {
         setIsLoading(false);
       }
@@ -44,13 +49,11 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (userData, token) => {
     localStorage.setItem('authToken', token);
-    localStorage.setItem('userData', JSON.stringify(userData));
     setUser(userData);
   };
 
   const logout = () => {
     localStorage.removeItem('authToken');
-    localStorage.removeItem('userData');
     setUser(null);
   };
 

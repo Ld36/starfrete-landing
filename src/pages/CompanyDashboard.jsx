@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/use-auth.jsx'
 import { useCompanyDashboard } from '../hooks/use-data-hooks.js'
 import { toast } from 'react-hot-toast'
 import Chat from '../components/Chat'
+import { VEHICLE_TYPES, BODY_TYPES } from '../constants/vehicleTypes'
 import {
   getCompanyFreights,
   getCompanyStats,
@@ -16,32 +17,6 @@ import {
   getChatMessages,
   markChatAsRead
 } from '../config/api'
-
-// Opções de veículos e carrocerias
-const VEHICLE_TYPES = [
-  { value: '', label: 'Selecione o tipo de veículo' },
-  { value: 'caminhao_toco', label: 'Caminhão Toco' },
-  { value: 'caminhao_truck', label: 'Caminhão Truck' },
-  { value: 'carreta_simples', label: 'Carreta Simples' },
-  { value: 'carreta_bi_trem', label: 'Carreta Bi-trem' },
-  { value: 'carreta_rodotrem', label: 'Carreta Rodotrem' },
-  { value: 'van', label: 'Van' },
-  { value: 'pickup', label: 'Pick-up' },
-  { value: 'utilitario', label: 'Utilitário' }
-]
-
-const BODY_TYPES = [
-  { value: '', label: 'Selecione o tipo de carroceria' },
-  { value: 'fechada', label: 'Fechada' },
-  { value: 'aberta', label: 'Aberta' },
-  { value: 'graneleiro', label: 'Graneleiro' },
-  { value: 'tanque', label: 'Tanque' },
-  { value: 'sider', label: 'Sider' },
-  { value: 'frigorifica', label: 'Frigorífica' },
-  { value: 'gaiola', label: 'Gaiola' },
-  { value: 'porta_container', label: 'Porta Container' },
-  { value: 'prancha', label: 'Prancha' }
-]
 
 const CompanyDashboard = () => {
   const { user, logout } = useAuth()
@@ -95,9 +70,9 @@ const CompanyDashboard = () => {
     cargo_type: '',
     cargo_weight: '',
     cargo_volume: '',
-    required_vehicle_type: '',
+    required_vehicle_type: VEHICLE_TYPES[0]?.value || '',
     required_vehicle_capacity: '',
-    required_body_type: '',
+    required_body_type: BODY_TYPES[0]?.value || '',
     pickup_date: '',
     delivery_deadline: '',
     suggested_price: ''
@@ -273,8 +248,14 @@ const CompanyDashboard = () => {
   // Função para excluir frete (apenas se ativo e sem motoristas)
   const handleDeleteFreight = async (freight) => {
     // Verificar se o frete pode ser excluído
-    if (freight.status && freight.status !== 'open') {
-      toast.error('Apenas fretes abertos podem ser excluídos.')
+    if (freight.status && freight.status !== 'active') {
+      toast.error('Apenas fretes ativos podem ser excluídos.')
+      return
+    }
+
+    // Verificar se há propostas de motoristas
+    if (freight.proposals && freight.proposals.length > 0) {
+      toast.error('Não é possível excluir fretes que já possuem propostas de motoristas.')
       return
     }
 
@@ -360,9 +341,9 @@ const CompanyDashboard = () => {
         cargo_type: newFreight.cargo_type,
         cargo_weight: parseFloat(newFreight.cargo_weight) || 0,
         cargo_volume: parseFloat(newFreight.cargo_volume) || 0,
-        required_vehicle_type: newFreight.required_vehicle_type,
+        required_vehicle_type: newFreight.required_vehicle_type || VEHICLE_TYPES[0]?.value || 'caminhao_toco',
         required_vehicle_capacity: parseFloat(newFreight.required_vehicle_capacity) || 0,
-        required_body_type: newFreight.required_body_type,
+        required_body_type: newFreight.required_body_type || BODY_TYPES[0]?.value || 'bau_fechado',
         pickup_date: newFreight.pickup_date ? new Date(newFreight.pickup_date).toISOString() : null,
         delivery_deadline: newFreight.delivery_deadline ? new Date(newFreight.delivery_deadline).toISOString() : null,
         suggested_price: newFreight.suggested_price ? parseFloat(newFreight.suggested_price) : 0

@@ -53,29 +53,29 @@ export const useOptimizedData = (fetchFunctionOrConfig, options = {}) => {
   }, [])
 
   // Função principal de fetch com otimizações
-  const fetchData = useCallback(async (forceRefresh = false, ...args) => {
-    // Evitar requisições simultâneas
-    if (isLoadingRef.current && !forceRefresh) {
-      return cacheRef.current.data
-    }
-
-    // Verificar cache
-    const now = Date.now()
-    if (!forceRefresh && 
-        cacheRef.current.lastFetch && 
-        cacheRef.current.data !== null &&
-        (now - cacheRef.current.lastFetch < cacheDuration)) {
-      setData(cacheRef.current.data)
-      setError(cacheRef.current.error)
-      return cacheRef.current.data
-    }
-
+  const fetchData = useCallback(async (...args) => {
     try {
+      const now = Date.now()
+      
+      // Verificar se já estamos carregando
+      if (isLoadingRef.current) {
+        return cacheRef.current.data
+      }
+
+      // Verificar cache válido
+      if (cacheRef.current.data && 
+          cacheRef.current.lastFetch && 
+          now - cacheRef.current.lastFetch < cacheDuration && 
+          !cacheRef.current.error) {
+        return cacheRef.current.data
+      }
+
+      // Marcar como carregando
       isLoadingRef.current = true
       setLoading(true)
       setError(null)
 
-      // Cancelar requisições anteriores
+      // Cancelar requisição anterior se existir
       if (abortControllerRef.current) {
         abortControllerRef.current.abort()
       }
@@ -83,25 +83,64 @@ export const useOptimizedData = (fetchFunctionOrConfig, options = {}) => {
       // Criar novo AbortController
       abortControllerRef.current = new AbortController()
 
-      // Fazer a requisição
-      const result = await fetchFunction(...args)
+      // Implementar retry para timeouts
+      let lastError = null
+      const maxRetries = 2
       
-      // Atualizar cache e estado
-      const responseData = result?.data?.data || result?.data || result
-      cacheRef.current = {
-        data: responseData,
-        lastFetch: now,
-        error: null
+      for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        try {
+          // Fazer a requisição
+          const result = await fetchFunction(...args)
+          
+          // Atualizar cache e estado
+          const responseData = result?.data?.data || result?.data || result
+          cacheRef.current = {
+            data: responseData,
+            lastFetch: now,
+            error: null
+          }
+          
+          setData(responseData)
+          return responseData
+          
+        } catch (err) {
+          lastError = err
+          
+          // Se foi cancelado, não tentar novamente
+          if (err.name === 'AbortError') {
+            return null
+          }
+          
+          // Para timeouts, tentar novamente (exceto na última tentativa)
+          if ((err.code === 'ECONNABORTED' || err.message.includes('timeout')) && attempt < maxRetries) {
+            console.log(`Tentativa ${attempt + 1} falhou por timeout, tentando novamente...`)
+            // Aguardar um pouco antes da próxima tentativa
+            await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)))
+            continue
+          }
+          
+          // Para outros erros, parar imediatamente
+          break
+        }
       }
       
-      setData(responseData)
-      return responseData
+      // Se chegou aqui, todas as tentativas falharam
+      throw lastError
 
     } catch (err) {
       if (err.name !== 'AbortError') {
-        const errorData = err?.response?.data?.message || err.message || 'Erro ao carregar dados'
-        cacheRef.current.error = errorData
-        setError(errorData)
+        let errorMessage = 'Erro ao carregar dados'
+        
+        if (err.code === 'ECONNABORTED' || err.message.includes('timeout')) {
+          errorMessage = 'A conexão demorou muito para responder. Verifique sua internet e tente novamente.'
+        } else if (err?.response?.data?.message) {
+          errorMessage = err.response.data.message
+        } else if (err.message) {
+          errorMessage = err.message
+        }
+        
+        cacheRef.current.error = errorMessage
+        setError(errorMessage)
         console.error('Erro na requisição:', err)
       }
       return null
