@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/use-auth.jsx'
 import { useCompanyDashboard } from '../hooks/use-data-hooks.js'
 import { toast } from 'react-hot-toast'
 import Chat from '../components/Chat'
+import ErrorBoundary from '../components/ErrorBoundary'
 import { VEHICLE_TYPES, BODY_TYPES } from '../constants/vehicleTypes'
 import {
   getCompanyFreights,
@@ -83,6 +84,28 @@ const CompanyDashboard = () => {
       refresh()
     }
   }, [user]) // Removendo 'refresh' para evitar loops infinitos
+
+  // Toast de boas-vindas apenas na primeira carga da página
+  useEffect(() => {
+    // Verifica se acabou de fazer login (baseado na URL ou flag)
+    const urlParams = new URLSearchParams(window.location.search)
+    const justLoggedIn = urlParams.get('welcome')
+    
+    if (user && user.name && !justLoggedIn) {
+      // Usar sessionStorage para mostrar apenas uma vez por sessão
+      const hasShownWelcome = sessionStorage.getItem('welcomeShown')
+      
+      if (!hasShownWelcome) {
+        setTimeout(() => {
+          toast.success(`Bem-vindo(a), ${user.name}!`, {
+            duration: 3000,
+            position: 'top-right'
+          })
+          sessionStorage.setItem('welcomeShown', 'true')
+        }, 500)
+      }
+    }
+  }, [user])
 
   const loadDashboardData = async () => {
     return refresh()
@@ -387,8 +410,10 @@ const CompanyDashboard = () => {
   }
 
   const handleLogout = () => {
-    logout()
-    navigate('/')
+    toast.success('Logout realizado com sucesso!');
+    logout();
+    // Redirecionar para login com parâmetro de logout
+    navigate('/login?logout=true');
   }
 
   const handleEditFreight = (freight) => {

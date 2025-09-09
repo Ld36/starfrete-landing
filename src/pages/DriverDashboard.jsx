@@ -15,50 +15,14 @@ import {
   getMyInterests
 } from '../config/api'
 
-  // Função para verificar compatibilidade de veículo usando valores padronizados
-  const isVehicleCompatible = (vehicle, freight) => {
-    if (!vehicle || !freight) return false
-    
-    // Normalizar valores para formato padronizado
-    const vehicleType = getVehicleTypeValue(vehicle.vehicle_type)
-    const vehicleBody = getBodyTypeValue(vehicle.body_type)
-    
-    const freightVehicleType = freight.required_vehicle_type
-    const freightBodyType = freight.required_body_type
-    
-    // Verificar compatibilidade de tipo de veículo
-    if (freightVehicleType && freightVehicleType !== vehicleType) {
-      return false
-    }
-    
-    // Verificar compatibilidade de carroceria
-    if (freightBodyType && freightBodyType !== vehicleBody) {
-      return false
-    }
-    
-    // Verificar capacidade de peso
-    if (freight.cargo_weight && vehicle.capacity_weight) {
-      if (freight.cargo_weight > vehicle.capacity_weight) {
-        return false
-      }
-    }
-    
-    // Verificar capacidade de volume
-    if (freight.cargo_volume && vehicle.capacity_volume) {
-      if (freight.cargo_volume > vehicle.capacity_volume) {
-        return false
-      }
-    }
-    
-    return true
-  }
-
-const DriverDashboard = () => {
-  const { user, logout } = useAuth()
+export default function DriverDashboard() {
   const navigate = useNavigate()
-  
-  // Usar hook otimizado específico para dashboard do motorista
+  const { user } = useAuth()
+
   const { freights, vehicles, interests: myInterests, loading: dataLoading, refresh, error: dataError } = useDriverDashboard()
+  
+  const [acceptedFreights, setAcceptedFreights] = useState([])
+  const [loadingAcceptedFreights, setLoadingAcceptedFreights] = useState(true)
   
   // Estados locais para UI e filtros
   const [filteredFreights, setFilteredFreights] = useState([])
@@ -116,6 +80,40 @@ const DriverDashboard = () => {
 
     checkApiStatus()
   }, [dataError, freights, vehicles, myInterests, dataLoading, apiStatus])
+
+  // useEffect para carregar fretes aceitos/em andamento
+  useEffect(() => {
+    loadAcceptedFreights()
+  }, [user])
+
+  const loadAcceptedFreights = async () => {
+    if (!user) return
+    
+    try {
+      setLoadingAcceptedFreights(true)
+      console.log('🚛 Loading accepted freights for driver...')
+      
+      const response = await getMyInterests()
+      console.log('📡 My interests response:', response.data)
+      
+      if (response.data.success) {
+        const interests = response.data.data || []
+        console.log('📋 All interests:', interests)
+        
+        // Filtrar apenas interesses aceitos/em andamento
+        const acceptedInterests = interests.filter(interest => 
+          ['accepted', 'in_progress', 'completed'].includes(interest.status)
+        )
+        
+        console.log('✅ Accepted interests:', acceptedInterests)
+        setAcceptedFreights(acceptedInterests)
+      }
+    } catch (error) {
+      console.error('❌ Error loading accepted freights:', error)
+    } finally {
+      setLoadingAcceptedFreights(false)
+    }
+  }
 
   // useEffect para aplicar filtros com debounce
   useEffect(() => {
@@ -441,6 +439,7 @@ const DriverDashboard = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Interesses Demonstrados</p>
               <p className="text-2xl font-semibold text-gray-900">{myInterests.length}</p>
+              <p className="text-xs text-gray-500">({acceptedFreights.length} aceitos)</p>
             </div>
           </div>
         </div>
@@ -473,6 +472,103 @@ const DriverDashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* Seção de Fretes Aceitos/Em Andamento */}
+      {acceptedFreights.length > 0 && (
+        <div className="bg-white rounded-lg shadow p-6 mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-medium text-gray-900">🚛 Minhas Entregas ({acceptedFreights.length})</h3>
+            <button
+              onClick={loadAcceptedFreights}
+              className="text-sm text-blue-600 hover:text-blue-800"
+            >
+              Atualizar
+            </button>
+          </div>
+          
+          {loadingAcceptedFreights ? (
+            <div className="text-center py-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="mt-2 text-gray-600">Carregando entregas...</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {acceptedFreights.map((interest) => {
+                const freight = interest.freight
+                if (!freight) return null
+                
+                return (
+                  <div key={interest.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div className="flex justify-between items-start mb-2">
+                      <h4 className="font-medium text-gray-900">{freight.title || 'Frete'}</h4>
+                      <span className={`px-2 py-1 text-xs rounded-full ${
+                        interest.status === 'accepted' ? 'bg-green-100 text-green-800' :
+                        interest.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
+                        interest.status === 'completed' ? 'bg-gray-100 text-gray-800' : 
+                        'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {interest.status === 'accepted' ? 'Aceito' :
+                         interest.status === 'in_progress' ? 'Em Andamento' :
+                         interest.status === 'completed' ? 'Concluído' : 
+                         interest.status}
+                      </span>
+                    </div>
+                    
+                    <div className="space-y-2 text-sm text-gray-600">
+                      <div className="flex items-center">
+                        <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <span>{freight.origin_city || 'Origem'} → {freight.destination_city || 'Destino'}</span>
+                      </div>
+                      
+                      <div className="flex items-center">
+                        <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                        </svg>
+                        <span>R$ {freight.suggested_price || freight.accepted_price || '0,00'}</span>
+                      </div>
+                      
+                      {freight.company?.company_name && (
+                        <div className="flex items-center">
+                          <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h4M9 7h1m-1 4h1m4-4h1m-1 4h1m-1 4h1m-1 4h1" />
+                          </svg>
+                          <span>{freight.company.company_name}</span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="mt-4 flex space-x-2">
+                      <button
+                        onClick={() => handleChatOpen(freight)}
+                        className="flex-1 bg-blue-600 text-white px-3 py-2 rounded-md text-sm hover:bg-blue-700 flex items-center justify-center"
+                      >
+                        <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                        </svg>
+                        Chat
+                      </button>
+                      
+                      <button
+                        onClick={() => navigate(`/freight/${freight.id}`)}
+                        className="flex-1 bg-gray-100 text-gray-700 px-3 py-2 rounded-md text-sm hover:bg-gray-200 flex items-center justify-center"
+                      >
+                        <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                        Ver Detalhes
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Filtros */}
       <div className="bg-white rounded-lg shadow p-6 mb-8">
@@ -903,5 +999,3 @@ const DriverDashboard = () => {
     </DriverLayout>
   )
 }
-
-export default DriverDashboard

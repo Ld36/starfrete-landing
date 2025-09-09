@@ -48,13 +48,22 @@ export default function NewLoginPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
-  // Limpeza forçada de sessão quando acessar a página de login
+  // Limpar sessão apenas se vier de um logout explícito ou se o token estiver expirado
   useEffect(() => {
-    // Se chegou na página de login, fazer logout completo
-    logout();
-    localStorage.clear();
-    sessionStorage.clear();
-    console.log('Sessão limpa ao acessar página de login');
+    // Só limpa se for um acesso direto à página de login OU se houver um parâmetro específico
+    const urlParams = new URLSearchParams(window.location.search);
+    const shouldClear = urlParams.get('logout') === 'true';
+    
+    if (shouldClear) {
+      logout();
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('userData');
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      console.log('Sessão limpa por logout explícito');
+      // Limpar o parâmetro da URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
   }, []);
 
   // Redirect if user is already logged in (desabilitado enquanto testamos)
@@ -140,18 +149,21 @@ export default function NewLoginPage() {
       console.log("Tentando login:", data);
       console.log("Username:", data.username);
       console.log("Password:", data.password);
-      console.log("User type:", data.user_type);
+      console.log("User type from form:", data.user_type);
       
       // Chamar a API de login diretamente (API só aceita email e password)
       const response = await loginAPI(data.username, data.password);
       console.log("Resposta da API:", response);
       console.log("Success:", response?.data?.success);
-      console.log("User data:", response?.data?.data?.user);
+      console.log("User data completo:", response?.data?.data?.user);
       console.log("Token:", response?.data?.data?.access_token);
       
       if (response?.data && response.data.success) {
         const userData = response.data.data.user;
         const token = response.data.data.access_token;
+        
+        // Log detalhado da estrutura do usuário
+        console.log("Estrutura do userData:", JSON.stringify(userData, null, 2));
         
         if (userData && token) {
           // Salvar no localStorage primeiro
@@ -160,17 +172,21 @@ export default function NewLoginPage() {
           
           // Usar a função login do hook para salvar os dados
           await login(userData, token);
-          toast.success("Login realizado com sucesso!");
           
           // Redirecionar baseado no tipo de usuário retornado pela API
-          const userType = userData.user_type || userData.role || userData.type;
+          const userType = userData.user_type || userData.role || userData.type || userData.account_type;
           console.log("Tipo de usuário para redirecionamento:", userType);
+          console.log("Campos disponíveis no userData:", Object.keys(userData));
           
           if (userType === 'company') {
+            // Dismissar qualquer toast existente antes de navegar
+            toast.dismiss();
             navigate('/company-dashboard');
           } else if (userType === 'driver') {
+            toast.dismiss();
             navigate('/driver/dashboard');
           } else if (userType === 'admin') {
+            toast.dismiss();
             navigate('/admin/dashboard');
           } else {
             console.error('Tipo de usuário não reconhecido:', userType);

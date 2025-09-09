@@ -15,6 +15,7 @@ import DriverDashboard from './pages/DriverDashboard'
 import AdminDashboard from './pages/AdminDashboard'
 import FreightDetails from './pages/FreightDetails'
 import ProfilePage from './pages/ProfilePage'
+import MessagesPage from './pages/MessagesPage'
 
 // Páginas do Driver
 import DriverAvailableFreights from './pages/DriverAvailableFreights'

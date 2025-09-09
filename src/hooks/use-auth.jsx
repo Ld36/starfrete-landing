@@ -54,7 +54,12 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem('authToken');
+    localStorage.removeItem('userData');
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
     setUser(null);
+    // Redirecionar para login
+    window.location.href = '/login';
   };
 
   const value = {
