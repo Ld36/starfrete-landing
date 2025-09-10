@@ -33,13 +33,24 @@ export default function DashboardOverview() {
 
   const loadDashboardData = async () => {
     try {
-      const [statsData, freightsData] = await Promise.all([
+      const [statsResponse, freightsResponse] = await Promise.all([
         getCompanyStats(),
         getCompanyFreights()
       ]);
       
-      setStats(statsData);
-      // Garantir que freightsData é um array
+      // Processar dados de stats da resposta da API
+      const statsData = statsResponse?.data?.data || statsResponse?.data || {};
+      
+      setStats({
+        total_freights: Number(statsData.total_freights || 0),
+        active_freights: Number(statsData.active_freights || 0),
+        completed_freights: Number(statsData.completed_freights || 0),
+        total_revenue: Number(statsData.total_revenue || 0)
+      });
+      
+      // Processar dados de fretes
+      const freightsData = freightsResponse?.data?.data || freightsResponse?.data || [];
+      
       const freights = Array.isArray(freightsData) ? freightsData : (freightsData?.freights || []);
       setRecentFreights(freights.slice(0, 5)); // Últimos 5 fretes
     } catch (error) {
@@ -76,10 +87,16 @@ export default function DashboardOverview() {
   };
 
   const formatCurrency = (value) => {
+    // Garantir que o valor é um número válido
+    const numValue = Number(value);
+    if (isNaN(numValue) || numValue === null || numValue === undefined) {
+      return 'R$ 0,00';
+    }
+    
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL'
-    }).format(value);
+    }).format(numValue);
   };
 
   const formatDate = (dateString) => {

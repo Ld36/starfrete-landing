@@ -5,6 +5,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import { login as loginAPI, registerCompany, registerDriver } from "../config/api";
 import axios from 'axios';
+import StableWrapper from "../components/StableWrapper.jsx";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import {
@@ -18,7 +19,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "../components/ui/radio-group";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { 
-  Loader2, Check, Truck, Building2, MapPin, Mail, 
+  Check, Truck, Building2, MapPin, Mail, 
   Phone, Lock, User, AlertCircle, Bike
 } from "lucide-react";
 
@@ -41,6 +42,14 @@ const loginSchema = {
 };
 
 export default function NewLoginPage() {
+  return (
+    <StableWrapper>
+      <NewLoginPageContent />
+    </StableWrapper>
+  );
+}
+
+function NewLoginPageContent() {
   const [activeTab, setActiveTab] = useState("login");
   const [registerStep, setRegisterStep] = useState("userType");
   const [selectedUserType, setSelectedUserType] = useState("company");
@@ -146,64 +155,46 @@ export default function NewLoginPage() {
     try {
       setLoading(true);
       
-      console.log("Tentando login:", data);
-      console.log("Username:", data.username);
-      console.log("Password:", data.password);
-      console.log("User type from form:", data.user_type);
-      
-      // Chamar a API de login diretamente (API só aceita email e password)
+      // Chamar a API de login
       const response = await loginAPI(data.username, data.password);
-      console.log("Resposta da API:", response);
-      console.log("Success:", response?.data?.success);
-      console.log("User data completo:", response?.data?.data?.user);
-      console.log("Token:", response?.data?.data?.access_token);
       
       if (response?.data && response.data.success) {
         const userData = response.data.data.user;
         const token = response.data.data.access_token;
         
-        // Log detalhado da estrutura do usuário
-        console.log("Estrutura do userData:", JSON.stringify(userData, null, 2));
-        
         if (userData && token) {
-          // Salvar no localStorage primeiro
+          // Salvar dados
           localStorage.setItem('authToken', token);
           localStorage.setItem('userData', JSON.stringify(userData));
           
-          // Usar a função login do hook para salvar os dados
+          // Atualizar estado
           await login(userData, token);
           
-          // Redirecionar baseado no tipo de usuário retornado pela API
+          // Redirecionar baseado no tipo de usuário
           const userType = userData.user_type || userData.role || userData.type || userData.account_type;
-          console.log("Tipo de usuário para redirecionamento:", userType);
-          console.log("Campos disponíveis no userData:", Object.keys(userData));
           
+          // Navegar imediatamente sem delays
           if (userType === 'company') {
-            // Dismissar qualquer toast existente antes de navegar
-            toast.dismiss();
-            navigate('/company-dashboard');
+            window.location.href = '/company-dashboard';
           } else if (userType === 'driver') {
-            toast.dismiss();
-            navigate('/driver/dashboard');
+            window.location.href = '/driver/dashboard';
           } else if (userType === 'admin') {
-            toast.dismiss();
-            navigate('/admin/dashboard');
+            window.location.href = '/admin/dashboard';
           } else {
-            console.error('Tipo de usuário não reconhecido:', userType);
-            toast.error('Tipo de usuário não reconhecido: ' + userType);
+            toast.error('Tipo de usuário não reconhecido');
+            setLoading(false);
           }
         } else {
-          console.error('Dados ausentes - userData:', userData, 'token:', token);
           toast.error("Dados de autenticação incompletos");
+          setLoading(false);
         }
       } else {
-        console.error('Login falhou:', response?.data);
         toast.error(response?.data?.message || "Credenciais inválidas");
+        setLoading(false);
       }
     } catch (error) {
       console.error("Erro no login:", error);
       toast.error("Erro ao fazer login. Verifique suas credenciais.");
-    } finally {
       setLoading(false);
     }
   };
@@ -405,10 +396,9 @@ export default function NewLoginPage() {
                       className="w-full h-11" 
                       disabled={loading}
                     >
-                      {loading ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      ) : null}
-                      Entrar
+                      <span className="flex items-center justify-center">
+                        {loading ? "Entrando..." : "Entrar"}
+                      </span>
                     </Button>
                   </form>
                 </Form>
@@ -714,10 +704,9 @@ export default function NewLoginPage() {
                           className="flex-1 h-11" 
                           disabled={loading}
                         >
-                          {loading ? (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          ) : null}
-                          Criar conta
+                          <span className="flex items-center justify-center">
+                            {loading ? "Criando..." : "Criar conta"}
+                          </span>
                         </Button>
                       ) : (
                         <Button 

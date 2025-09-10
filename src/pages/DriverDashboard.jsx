@@ -91,21 +91,17 @@ export default function DriverDashboard() {
     
     try {
       setLoadingAcceptedFreights(true)
-      console.log('🚛 Loading accepted freights for driver...')
       
       const response = await getMyInterests()
-      console.log('📡 My interests response:', response.data)
       
       if (response.data.success) {
         const interests = response.data.data || []
-        console.log('📋 All interests:', interests)
         
         // Filtrar apenas interesses aceitos/em andamento
         const acceptedInterests = interests.filter(interest => 
           ['accepted', 'in_progress', 'completed'].includes(interest.status)
         )
         
-        console.log('✅ Accepted interests:', acceptedInterests)
         setAcceptedFreights(acceptedInterests)
       }
     } catch (error) {
@@ -414,60 +410,60 @@ export default function DriverDashboard() {
   return (
     <DriverLayout>
       {/* Estatísticas do motorista */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white rounded-lg shadow p-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="bg-white rounded-lg shadow p-4">
           <div className="flex items-center">
-            <div className="p-2 bg-blue-100 rounded-lg">
+            <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
               <svg className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2M4 13h2m13-8V4a1 1 0 00-1-1H7a1 1 0 00-1 1v1m8 0V4.5" />
               </svg>
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Fretes Disponíveis</p>
-              <p className="text-2xl font-semibold text-gray-900">{filteredFreights.length}</p>
+            <div className="ml-3 min-w-0 flex-1">
+              <p className="text-sm font-medium text-gray-500 truncate">Fretes Disponíveis</p>
+              <p className="text-xl font-semibold text-gray-900">{filteredFreights.length}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-lg shadow p-4">
           <div className="flex items-center">
-            <div className="p-2 bg-blue-100 rounded-lg">
+            <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
               <svg className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Interesses Demonstrados</p>
-              <p className="text-2xl font-semibold text-gray-900">{myInterests.length}</p>
-              <p className="text-xs text-gray-500">({acceptedFreights.length} aceitos)</p>
+            <div className="ml-3 min-w-0 flex-1">
+              <p className="text-sm font-medium text-gray-500 truncate">Interesses</p>
+              <p className="text-xl font-semibold text-gray-900">{myInterests.length}</p>
+              <p className="text-xs text-gray-500 truncate">({acceptedFreights.length} aceitos)</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-lg shadow p-4">
           <div className="flex items-center">
-            <div className="p-2 bg-blue-100 rounded-lg">
+            <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
               <svg className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
               </svg>
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Meus Veículos</p>
-              <p className="text-2xl font-semibold text-gray-900">{vehicles.length}</p>
+            <div className="ml-3 min-w-0 flex-1">
+              <p className="text-sm font-medium text-gray-500 truncate">Meus Veículos</p>
+              <p className="text-xl font-semibold text-gray-900">{vehicles.length}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-lg shadow p-4">
           <div className="flex items-center">
-            <div className="p-2 bg-blue-100 rounded-lg">
+            <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
               <svg className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
               </svg>
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Ganhos do Mês</p>
-              <p className="text-2xl font-semibold text-gray-900">R$ 0,00</p>
+            <div className="ml-3 min-w-0 flex-1">
+              <p className="text-sm font-medium text-gray-500 truncate">Ganhos do Mês</p>
+              <p className="text-xl font-semibold text-gray-900">R$ 0,00</p>
             </div>
           </div>
         </div>
