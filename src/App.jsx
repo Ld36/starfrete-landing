@@ -9,6 +9,7 @@ import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import NewLoginPage from './pages/NewLoginPage'
 import SimpleLoginPage from './pages/SimpleLoginPage'
+import AdminLoginPage from './pages/AdminLoginPage'
 import NewRegisterPage from './pages/NewRegisterPage'
 import CompanyDashboard from './pages/CompanyDashboard'
 import NewCompanyDashboard from './pages/NewCompanyDashboard'
@@ -56,6 +57,7 @@ function App() {
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<SimpleLoginPage />} />
+            <Route path="/admin-login" element={<AdminLoginPage />} />
             <Route path="/register" element={<NewRegisterPage />} />
             
             {/* Rotas antigas (manter por compatibilidade) */}
