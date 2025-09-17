@@ -23,20 +23,37 @@ import {
   Phone, Lock, User, AlertCircle, Bike
 } from "lucide-react";
 
+// Importar utilitários de validação
+import {
+  validateEmail,
+  validateRequired,
+  validateStrongPassword,
+  validateFullName,
+  validateCPF,
+  validateCNPJ,
+  validateCEP,
+  validatePhone,
+  handleCPFInput,
+  handleCNPJInput,
+  handleCEPInput,
+  handlePhoneInput,
+  errorMessages
+} from "../utils/validation.js";
+
 // Schema para validação do login
 const loginSchema = {
   username: (value) => {
-    if (!value) return "Nome de usuário é obrigatório";
-    if (value.length < 3) return "Nome de usuário deve ter pelo menos 3 caracteres";
+    if (!validateRequired(value)) return errorMessages.required;
+    if (!validateEmail(value)) return errorMessages.email;
     return null;
   },
   password: (value) => {
-    if (!value) return "Senha é obrigatória";
-    if (value.length < 6) return "Senha deve ter pelo menos 6 caracteres";
+    if (!validateRequired(value)) return errorMessages.required;
+    if (value.length < 6) return errorMessages.minLength(6);
     return null;
   },
   userType: (value) => {
-    if (!value) return "Selecione um tipo de usuário";
+    if (!validateRequired(value)) return "Selecione um tipo de usuário";
     return null;
   }
 };
@@ -350,15 +367,26 @@ function NewLoginPageContent() {
                     <FormField
                       control={loginForm.control}
                       name="username"
+                      rules={{
+                        required: errorMessages.required,
+                        validate: (value) => {
+                          if (!validateEmail(value)) {
+                            return errorMessages.email;
+                          }
+                          return true;
+                        }
+                      }}
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Nome de usuário ou email</FormLabel>
+                          <FormLabel>Email</FormLabel>
                           <FormControl>
                             <Input 
+                              type="email"
                               placeholder="seu@email.com" 
                               {...field} 
                               value={field.value ?? ''} 
                               className="h-11"
+                              autoComplete="email"
                             />
                           </FormControl>
                           <FormMessage />
@@ -369,16 +397,24 @@ function NewLoginPageContent() {
                     <FormField
                       control={loginForm.control}
                       name="password"
+                      rules={{
+                        required: errorMessages.required,
+                        minLength: {
+                          value: 6,
+                          message: errorMessages.minLength(6)
+                        }
+                      }}
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Senha</FormLabel>
                           <FormControl>
                             <Input 
-                              type="password" 
+                              type="password"
                               placeholder="Sua senha" 
                               {...field} 
                               value={field.value ?? ''} 
                               className="h-11"
+                              autoComplete="current-password"
                             />
                           </FormControl>
                           <div className="text-right mt-1">
@@ -489,6 +525,17 @@ function NewLoginPageContent() {
                         <FormField
                           control={registerForm.control}
                           name="username"
+                          rules={{
+                            required: errorMessages.required,
+                            minLength: {
+                              value: 3,
+                              message: errorMessages.minLength(3)
+                            },
+                            maxLength: {
+                              value: 20,
+                              message: errorMessages.maxLength(20)
+                            }
+                          }}
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Nome de usuário</FormLabel>
@@ -498,6 +545,7 @@ function NewLoginPageContent() {
                                   {...field} 
                                   value={field.value ?? ''} 
                                   className="h-11"
+                                  autoComplete="username"
                                 />
                               </FormControl>
                               <FormMessage />
@@ -508,6 +556,15 @@ function NewLoginPageContent() {
                         <FormField
                           control={registerForm.control}
                           name="email"
+                          rules={{
+                            required: errorMessages.required,
+                            validate: (value) => {
+                              if (!validateEmail(value)) {
+                                return errorMessages.email;
+                              }
+                              return true;
+                            }
+                          }}
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Email</FormLabel>
@@ -518,6 +575,7 @@ function NewLoginPageContent() {
                                   {...field} 
                                   value={field.value ?? ''} 
                                   className="h-11"
+                                  autoComplete="email"
                                 />
                               </FormControl>
                               <FormMessage />
@@ -531,6 +589,13 @@ function NewLoginPageContent() {
                             <FormField
                               control={registerForm.control}
                               name="company_name"
+                              rules={{
+                                required: errorMessages.required,
+                                minLength: {
+                                  value: 2,
+                                  message: errorMessages.minLength(2)
+                                }
+                              }}
                               render={({ field }) => (
                                 <FormItem>
                                   <FormLabel>Nome da empresa</FormLabel>
@@ -540,6 +605,7 @@ function NewLoginPageContent() {
                                       {...field} 
                                       value={field.value ?? ''} 
                                       className="h-11"
+                                      autoComplete="organization"
                                     />
                                   </FormControl>
                                   <FormMessage />
@@ -550,6 +616,15 @@ function NewLoginPageContent() {
                             <FormField
                               control={registerForm.control}
                               name="cnpj"
+                              rules={{
+                                required: errorMessages.required,
+                                validate: (value) => {
+                                  if (!validateCNPJ(value)) {
+                                    return errorMessages.cnpj;
+                                  }
+                                  return true;
+                                }
+                              }}
                               render={({ field }) => (
                                 <FormItem>
                                   <FormLabel>CNPJ</FormLabel>
@@ -559,6 +634,8 @@ function NewLoginPageContent() {
                                       {...field} 
                                       value={field.value ?? ''} 
                                       className="h-11"
+                                      onChange={(e) => handleCNPJInput(e, field.onChange)}
+                                      maxLength={18}
                                     />
                                   </FormControl>
                                   <FormMessage />
@@ -574,6 +651,15 @@ function NewLoginPageContent() {
                             <FormField
                               control={registerForm.control}
                               name="full_name"
+                              rules={{
+                                required: errorMessages.required,
+                                validate: (value) => {
+                                  if (!validateFullName(value)) {
+                                    return errorMessages.fullName;
+                                  }
+                                  return true;
+                                }
+                              }}
                               render={({ field }) => (
                                 <FormItem>
                                   <FormLabel>Nome completo</FormLabel>
@@ -583,6 +669,7 @@ function NewLoginPageContent() {
                                       {...field} 
                                       value={field.value ?? ''} 
                                       className="h-11"
+                                      autoComplete="name"
                                     />
                                   </FormControl>
                                   <FormMessage />
@@ -593,6 +680,15 @@ function NewLoginPageContent() {
                             <FormField
                               control={registerForm.control}
                               name="cpf"
+                              rules={{
+                                required: errorMessages.required,
+                                validate: (value) => {
+                                  if (!validateCPF(value)) {
+                                    return errorMessages.cpf;
+                                  }
+                                  return true;
+                                }
+                              }}
                               render={({ field }) => (
                                 <FormItem>
                                   <FormLabel>CPF</FormLabel>
@@ -602,6 +698,8 @@ function NewLoginPageContent() {
                                       {...field} 
                                       value={field.value ?? ''} 
                                       className="h-11"
+                                      onChange={(e) => handleCPFInput(e, field.onChange)}
+                                      maxLength={14}
                                     />
                                   </FormControl>
                                   <FormMessage />
@@ -614,6 +712,15 @@ function NewLoginPageContent() {
                         <FormField
                           control={registerForm.control}
                           name="phone"
+                          rules={{
+                            required: errorMessages.required,
+                            validate: (value) => {
+                              if (!validatePhone(value)) {
+                                return errorMessages.phone;
+                              }
+                              return true;
+                            }
+                          }}
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Telefone</FormLabel>
@@ -623,6 +730,10 @@ function NewLoginPageContent() {
                                   {...field} 
                                   value={field.value ?? ''} 
                                   className="h-11"
+                                  onChange={(e) => handlePhoneInput(e, field.onChange)}
+                                  maxLength={15}
+                                  type="tel"
+                                  autoComplete="tel"
                                 />
                               </FormControl>
                               <FormMessage />
@@ -633,19 +744,32 @@ function NewLoginPageContent() {
                         <FormField
                           control={registerForm.control}
                           name="password"
+                          rules={{
+                            required: errorMessages.required,
+                            validate: (value) => {
+                              if (!validateStrongPassword(value)) {
+                                return errorMessages.password;
+                              }
+                              return true;
+                            }
+                          }}
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Senha</FormLabel>
                               <FormControl>
                                 <Input 
                                   type="password" 
-                                  placeholder="Crie uma senha" 
+                                  placeholder="Crie uma senha forte" 
                                   {...field}
                                   value={field.value ?? ''} 
                                   className="h-11"
+                                  autoComplete="new-password"
                                 />
                               </FormControl>
                               <FormMessage />
+                              <p className="text-xs text-gray-500">
+                                Mínimo 8 caracteres, com letras maiúsculas, minúsculas e números
+                              </p>
                             </FormItem>
                           )}
                         />

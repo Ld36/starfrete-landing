@@ -1,6 +1,15 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { createFreight } from '../config/api'
+import {
+  validateRequired,
+  validateCEP,
+  handleCEPInput,
+  handleCurrencyInput,
+  handleNumbersOnlyInput,
+  errorMessages,
+  cleanFormat
+} from '../utils/validation.js'
 
 export default function CreateFreightPage() {
   const [formData, setFormData] = useState({
@@ -14,11 +23,60 @@ export default function CreateFreightPage() {
   })
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
+  const [errors, setErrors] = useState({})
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!validateRequired(formData.title)) {
+      newErrors.title = errorMessages.required;
+    }
+
+    if (!validateRequired(formData.description)) {
+      newErrors.description = errorMessages.required;
+    }
+
+    if (!validateRequired(formData.origin)) {
+      newErrors.origin = errorMessages.required;
+    } else if (!validateCEP(formData.origin)) {
+      newErrors.origin = errorMessages.cep;
+    }
+
+    if (!validateRequired(formData.destination)) {
+      newErrors.destination = errorMessages.required;
+    } else if (!validateCEP(formData.destination)) {
+      newErrors.destination = errorMessages.cep;
+    }
+
+    if (!validateRequired(formData.weight)) {
+      newErrors.weight = errorMessages.required;
+    } else if (isNaN(parseFloat(formData.weight)) || parseFloat(formData.weight) <= 0) {
+      newErrors.weight = 'Peso deve ser um número válido maior que zero';
+    }
+
+    if (!validateRequired(formData.price)) {
+      newErrors.price = errorMessages.required;
+    } else if (isNaN(parseFloat(cleanFormat(formData.price))) || parseFloat(cleanFormat(formData.price)) <= 0) {
+      newErrors.price = 'Preço deve ser um valor válido maior que zero';
+    }
+
+    if (!validateRequired(formData.deadline)) {
+      newErrors.deadline = errorMessages.required;
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
     setMessage('')
+
+    if (!validateForm()) {
+      setLoading(false);
+      return;
+    }
 
     try {
       const freightData = {
@@ -27,7 +85,7 @@ export default function CreateFreightPage() {
         origin: formData.origin,
         destination: formData.destination,
         weight: parseFloat(formData.weight),
-        price: parseFloat(formData.price),
+        price: parseFloat(cleanFormat(formData.price)),
         deadline: formData.deadline
       }
 
@@ -54,12 +112,45 @@ export default function CreateFreightPage() {
   }
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target
+    const { name, value } = e.target;
+    
+    // Limpar erro do campo quando o usuário começar a digitar
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: undefined
+      }));
+    }
+
+    let formattedValue = value;
+    
+    // Aplicar máscaras específicas
+    if (name === 'origin' || name === 'destination') {
+      // Máscara para CEP
+      formattedValue = value.replace(/\D/g, '').replace(/^(\d{5})(\d{3})$/, '$1-$2');
+      if (formattedValue.length > 9) formattedValue = formattedValue.substring(0, 9);
+    } else if (name === 'weight') {
+      // Apenas números e vírgula/ponto para peso
+      formattedValue = value.replace(/[^\d.,]/g, '');
+    } else if (name === 'price') {
+      // Formatação de moeda
+      const cleaned = value.replace(/\D/g, '');
+      if (cleaned) {
+        const number = parseFloat(cleaned) / 100;
+        formattedValue = new Intl.NumberFormat('pt-BR', {
+          style: 'currency',
+          currency: 'BRL'
+        }).format(number);
+      } else {
+        formattedValue = '';
+      }
+    }
+
     setFormData(prev => ({
       ...prev,
-      [name]: value
-    }))
-  }
+      [name]: formattedValue
+    }));
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -75,7 +166,7 @@ export default function CreateFreightPage() {
           <div className="space-y-4">
             <div>
               <label htmlFor="title" className="block text-sm font-medium text-gray-700">
-                Título do frete
+                Título do frete *
               </label>
               <input
                 id="title"
@@ -84,14 +175,17 @@ export default function CreateFreightPage() {
                 required
                 value={formData.title}
                 onChange={handleInputChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${
+                  errors.title ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                }`}
                 placeholder="Ex: Entrega de Eletrônicos"
               />
+              {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title}</p>}
             </div>
 
             <div>
               <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-                Descrição detalhada
+                Descrição detalhada *
               </label>
               <textarea
                 id="description"
@@ -99,15 +193,18 @@ export default function CreateFreightPage() {
                 required
                 value={formData.description}
                 onChange={handleInputChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${
+                  errors.description ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                }`}
                 placeholder="Descreva detalhadamente o que será transportado"
                 rows={3}
               />
+              {errors.description && <p className="mt-1 text-sm text-red-600">{errors.description}</p>}
             </div>
 
             <div>
               <label htmlFor="origin" className="block text-sm font-medium text-gray-700">
-                Local de origem
+                CEP de Origem *
               </label>
               <input
                 id="origin"
@@ -116,14 +213,18 @@ export default function CreateFreightPage() {
                 required
                 value={formData.origin}
                 onChange={handleInputChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Ex: São Paulo, SP"
+                className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${
+                  errors.origin ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                }`}
+                placeholder="00000-000"
+                maxLength={9}
               />
+              {errors.origin && <p className="mt-1 text-sm text-red-600">{errors.origin}</p>}
             </div>
 
             <div>
               <label htmlFor="destination" className="block text-sm font-medium text-gray-700">
-                Local de destino
+                CEP de Destino *
               </label>
               <input
                 id="destination"
@@ -132,48 +233,56 @@ export default function CreateFreightPage() {
                 required
                 value={formData.destination}
                 onChange={handleInputChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Ex: Rio de Janeiro, RJ"
+                className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${
+                  errors.destination ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                }`}
+                placeholder="00000-000"
+                maxLength={9}
               />
+              {errors.destination && <p className="mt-1 text-sm text-red-600">{errors.destination}</p>}
             </div>
 
             <div>
               <label htmlFor="weight" className="block text-sm font-medium text-gray-700">
-                Peso (kg)
+                Peso (kg) *
               </label>
               <input
                 id="weight"
                 name="weight"
-                type="number"
-                step="0.1"
+                type="text"
                 required
                 value={formData.weight}
                 onChange={handleInputChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${
+                  errors.weight ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                }`}
                 placeholder="Ex: 150.5"
               />
+              {errors.weight && <p className="mt-1 text-sm text-red-600">{errors.weight}</p>}
             </div>
 
             <div>
               <label htmlFor="price" className="block text-sm font-medium text-gray-700">
-                Preço (R$)
+                Preço *
               </label>
               <input
                 id="price"
                 name="price"
-                type="number"
-                step="0.01"
+                type="text"
                 required
                 value={formData.price}
                 onChange={handleInputChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Ex: 1200.00"
+                className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${
+                  errors.price ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                }`}
+                placeholder="R$ 0,00"
               />
+              {errors.price && <p className="mt-1 text-sm text-red-600">{errors.price}</p>}
             </div>
 
             <div>
               <label htmlFor="deadline" className="block text-sm font-medium text-gray-700">
-                Prazo de entrega
+                Prazo de entrega *
               </label>
               <input
                 id="deadline"
@@ -182,8 +291,12 @@ export default function CreateFreightPage() {
                 required
                 value={formData.deadline}
                 onChange={handleInputChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${
+                  errors.deadline ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                }`}
+                min={new Date().toISOString().slice(0, 16)}
               />
+              {errors.deadline && <p className="mt-1 text-sm text-red-600">{errors.deadline}</p>}
             </div>
           </div>
 

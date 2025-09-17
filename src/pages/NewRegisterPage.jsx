@@ -22,6 +22,18 @@ import {
   CreditCard, Users, Building, Bike, AlertCircle
 } from "lucide-react";
 import { registerCompany, registerDriver } from "../config/api";
+import { 
+  validateEmail, 
+  validatePassword, 
+  validateCPF, 
+  validateCNPJ, 
+  validatePhone, 
+  validateCEP,
+  formatCPF,
+  formatCNPJ,
+  formatPhone,
+  formatCEP
+} from "../utils/validation.js";
 
 // Componente para upload de documentos
 const DocumentUpload = ({ label, description, required, accept, value, onChange }) => {
@@ -190,6 +202,31 @@ export default function NewRegisterPage() {
     },
   });
 
+  // Função para aplicar máscaras
+  const handleInputWithMask = (fieldName, value, onChange) => {
+    let maskedValue = value;
+    
+    switch (fieldName) {
+      case 'cnpj':
+        maskedValue = formatCNPJ(value);
+        break;
+      case 'cpf':
+      case 'responsible_cpf':
+        maskedValue = formatCPF(value);
+        break;
+      case 'phone':
+        maskedValue = formatPhone(value);
+        break;
+      case 'cep':
+        maskedValue = formatCEP(value);
+        break;
+      default:
+        maskedValue = value;
+    }
+    
+    onChange(maskedValue);
+  };
+
   const onRegisterSubmit = async (data) => {
     try {
       setLoading(true);
@@ -197,6 +234,40 @@ export default function NewRegisterPage() {
       // Validar confirmação de senha
       if (data.password !== data.confirmPassword) {
         toast.error("As senhas não coincidem");
+        return;
+      }
+
+      // Validações básicas
+      if (!validateEmail(data.email)) {
+        toast.error("Email inválido");
+        return;
+      }
+
+      if (!validatePassword(data.password)) {
+        toast.error("A senha deve ter pelo menos 6 caracteres");
+        return;
+      }
+
+      // Validações específicas por tipo de usuário
+      if (data.userType === "company") {
+        if (data.cnpj && !validateCNPJ(data.cnpj)) {
+          toast.error("CNPJ inválido");
+          return;
+        }
+        
+        if (data.responsible_cpf && !validateCPF(data.responsible_cpf)) {
+          toast.error("CPF do responsável inválido");
+          return;
+        }
+      } else if (data.userType === "driver") {
+        if (data.cpf && !validateCPF(data.cpf)) {
+          toast.error("CPF inválido");
+          return;
+        }
+      }
+
+      if (data.phone && !validatePhone(data.phone)) {
+        toast.error("Telefone inválido");
         return;
       }
 
@@ -470,7 +541,9 @@ export default function NewRegisterPage() {
                                   placeholder="00.000.000/0000-00" 
                                   {...field} 
                                   value={field.value ?? ''} 
+                                  onChange={(e) => handleInputWithMask('cnpj', e.target.value, field.onChange)}
                                   className="h-11"
+                                  maxLength={18}
                                 />
                               </FormControl>
                               <FormMessage />
@@ -508,7 +581,9 @@ export default function NewRegisterPage() {
                                   placeholder="000.000.000-00" 
                                   {...field} 
                                   value={field.value ?? ''} 
+                                  onChange={(e) => handleInputWithMask('cpf', e.target.value, field.onChange)}
                                   className="h-11"
+                                  maxLength={14}
                                 />
                               </FormControl>
                               <FormMessage />
@@ -551,7 +626,9 @@ export default function NewRegisterPage() {
                                   placeholder="000.000.000-00" 
                                   {...field} 
                                   value={field.value ?? ''} 
+                                  onChange={(e) => handleInputWithMask('cpf', e.target.value, field.onChange)}
                                   className="h-11"
+                                  maxLength={14}
                                 />
                               </FormControl>
                               <FormMessage />
@@ -649,7 +726,9 @@ export default function NewRegisterPage() {
                               placeholder="(00) 00000-0000" 
                               {...field} 
                               value={field.value ?? ''} 
+                              onChange={(e) => handleInputWithMask('phone', e.target.value, field.onChange)}
                               className="h-11"
+                              maxLength={15}
                             />
                           </FormControl>
                           <FormMessage />
