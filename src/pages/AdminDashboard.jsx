@@ -16,6 +16,7 @@ import {
   TrendingUp,
   Shield
 } from 'lucide-react';
+// Import dos hooks e APIs necessários
 import { useAdminDashboard } from '../hooks/use-data-hooks.js';
 import { 
   approveUser,
