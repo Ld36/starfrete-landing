@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
+import { getUserVehicles } from '../config/api'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -25,21 +26,38 @@ const FreightDetails = () => {
   const { id } = useParams()
   const [freight, setFreight] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [vehicles, setVehicles] = useState([])
 
   useEffect(() => {
     loadFreightDetails()
+    loadVehicles()
   }, [id])
+
+  const loadVehicles = async () => {
+    try {
+      const response = await getUserVehicles()
+      setVehicles(response.data.data || [])
+    } catch (error) {
+      console.error('Erro ao carregar veículos:', error)
+    }
+  }
 
   const loadFreightDetails = async () => {
     try {
-      const token = localStorage.getItem('access_token')
-      const response = await fetch(`/api/v1/freights/${id}`, {
+      const token = localStorage.getItem('authToken')
+      const API_BASE_URL = process.env.NODE_ENV === 'production' 
+        ? 'https://freight-backend-api.onrender.com' 
+        : 'http://localhost:5000'
+      
+      const response = await fetch(`${API_BASE_URL}/api/v1/freights/${id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       
       if (response.ok) {
         const data = await response.json()
-        setFreight(data.data)
+        setFreight(data.data || data)
+      } else {
+        console.error('Erro na resposta:', response.status, response.statusText)
       }
       
       setLoading(false)
@@ -50,26 +68,41 @@ const FreightDetails = () => {
   }
 
   const handleShowInterest = async () => {
+    // Verificar se há veículos cadastrados
+    if (!vehicles || vehicles.length === 0) {
+      alert('Você precisa cadastrar pelo menos um veículo antes de demonstrar interesse em fretes.')
+      return
+    }
+
     try {
-      const token = localStorage.getItem('access_token')
-      const response = await fetch(`/api/v1/freights/${id}/interest`, {
+      const token = localStorage.getItem('authToken')
+      const API_BASE_URL = process.env.NODE_ENV === 'production' 
+        ? 'https://freight-backend-api.onrender.com' 
+        : 'http://localhost:5000'
+        
+      const response = await fetch(`${API_BASE_URL}/api/v1/freights/${id}/interest`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          vehicle_id: 1, // Assumindo primeiro veículo
+          vehicle_id: vehicles[0].id, // Usar o primeiro veículo disponível
           message: 'Tenho interesse neste frete'
         })
       })
 
-      const data = await response.json()
-      
-      if (data.success) {
-        alert('Interesse manifestado com sucesso!')
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success) {
+          alert('Interesse manifestado com sucesso!')
+        } else {
+          alert(data.message || 'Erro ao manifestar interesse')
+        }
       } else {
-        alert(data.message || 'Erro ao manifestar interesse')
+        const errorData = await response.text()
+        console.error('Erro na resposta:', response.status, errorData)
+        alert('Erro ao manifestar interesse')
       }
     } catch (error) {
       alert('Erro de conexão')
@@ -89,7 +122,7 @@ const FreightDetails = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Frete não encontrado</h2>
-          <Link to="/dashboard">
+          <Link to="/driver/dashboard">
             <Button>
               <ArrowLeft className="h-4 w-4 mr-2" />
               Voltar ao Dashboard
@@ -106,7 +139,7 @@ const FreightDetails = () => {
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center h-16">
-            <Link to="/dashboard">
+            <Link to="/driver/dashboard">
               <Button variant="ghost" size="sm">
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Voltar

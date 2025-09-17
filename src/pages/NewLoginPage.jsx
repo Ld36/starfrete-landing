@@ -5,6 +5,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import { login as loginAPI, registerCompany, registerDriver } from "../config/api";
 import axios from 'axios';
+import StableWrapper from "../components/StableWrapper.jsx";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import {
@@ -18,7 +19,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "../components/ui/radio-group";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { 
-  Loader2, Check, Truck, Building2, MapPin, Mail, 
+  Check, Truck, Building2, MapPin, Mail, 
   Phone, Lock, User, AlertCircle, Bike
 } from "lucide-react";
 
@@ -41,6 +42,14 @@ const loginSchema = {
 };
 
 export default function NewLoginPage() {
+  return (
+    <StableWrapper>
+      <NewLoginPageContent />
+    </StableWrapper>
+  );
+}
+
+function NewLoginPageContent() {
   const [activeTab, setActiveTab] = useState("login");
   const [registerStep, setRegisterStep] = useState("userType");
   const [selectedUserType, setSelectedUserType] = useState("company");
@@ -48,13 +57,22 @@ export default function NewLoginPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
-  // Limpeza forçada de sessão quando acessar a página de login
+  // Limpar sessão apenas se vier de um logout explícito ou se o token estiver expirado
   useEffect(() => {
-    // Se chegou na página de login, fazer logout completo
-    logout();
-    localStorage.clear();
-    sessionStorage.clear();
-    console.log('Sessão limpa ao acessar página de login');
+    // Só limpa se for um acesso direto à página de login OU se houver um parâmetro específico
+    const urlParams = new URLSearchParams(window.location.search);
+    const shouldClear = urlParams.get('logout') === 'true';
+    
+    if (shouldClear) {
+      logout();
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('userData');
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      console.log('Sessão limpa por logout explícito');
+      // Limpar o parâmetro da URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
   }, []);
 
   // Redirect if user is already logged in (desabilitado enquanto testamos)
@@ -64,7 +82,7 @@ export default function NewLoginPage() {
       console.log("Usuário autenticado:", user);
       
       if (user.user_type === "company") {
-        navigate("/company/dashboard");
+        navigate("/company-dashboard");
       } else if (user.user_type === "admin") {
         navigate("/admin/dashboard");
       } else if (user.user_type === "driver") {
@@ -137,57 +155,46 @@ export default function NewLoginPage() {
     try {
       setLoading(true);
       
-      console.log("Tentando login:", data);
-      console.log("Username:", data.username);
-      console.log("Password:", data.password);
-      console.log("User type:", data.user_type);
-      
-      // Chamar a API de login diretamente (API só aceita email e password)
+      // Chamar a API de login
       const response = await loginAPI(data.username, data.password);
-      console.log("Resposta da API:", response);
-      console.log("Success:", response?.data?.success);
-      console.log("User data:", response?.data?.data?.user);
-      console.log("Token:", response?.data?.data?.access_token);
       
       if (response?.data && response.data.success) {
         const userData = response.data.data.user;
         const token = response.data.data.access_token;
         
         if (userData && token) {
-          // Salvar no localStorage primeiro
+          // Salvar dados
           localStorage.setItem('authToken', token);
           localStorage.setItem('userData', JSON.stringify(userData));
           
-          // Usar a função login do hook para salvar os dados
+          // Atualizar estado
           await login(userData, token);
-          toast.success("Login realizado com sucesso!");
           
-          // Redirecionar baseado no tipo de usuário retornado pela API
-          const userType = userData.user_type || userData.role || userData.type;
-          console.log("Tipo de usuário para redirecionamento:", userType);
+          // Redirecionar baseado no tipo de usuário
+          const userType = userData.user_type || userData.role || userData.type || userData.account_type;
           
+          // Navegar imediatamente sem delays
           if (userType === 'company') {
-            navigate('/company/dashboard');
+            window.location.href = '/company-dashboard';
           } else if (userType === 'driver') {
-            navigate('/driver/dashboard');
+            window.location.href = '/driver/dashboard';
           } else if (userType === 'admin') {
-            navigate('/admin/dashboard');
+            window.location.href = '/admin/dashboard';
           } else {
-            console.error('Tipo de usuário não reconhecido:', userType);
-            toast.error('Tipo de usuário não reconhecido: ' + userType);
+            toast.error('Tipo de usuário não reconhecido');
+            setLoading(false);
           }
         } else {
-          console.error('Dados ausentes - userData:', userData, 'token:', token);
           toast.error("Dados de autenticação incompletos");
+          setLoading(false);
         }
       } else {
-        console.error('Login falhou:', response?.data);
         toast.error(response?.data?.message || "Credenciais inválidas");
+        setLoading(false);
       }
     } catch (error) {
       console.error("Erro no login:", error);
       toast.error("Erro ao fazer login. Verifique suas credenciais.");
-    } finally {
       setLoading(false);
     }
   };
@@ -389,10 +396,9 @@ export default function NewLoginPage() {
                       className="w-full h-11" 
                       disabled={loading}
                     >
-                      {loading ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      ) : null}
-                      Entrar
+                      <span className="flex items-center justify-center">
+                        {loading ? "Entrando..." : "Entrar"}
+                      </span>
                     </Button>
                   </form>
                 </Form>
@@ -698,10 +704,9 @@ export default function NewLoginPage() {
                           className="flex-1 h-11" 
                           disabled={loading}
                         >
-                          {loading ? (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          ) : null}
-                          Criar conta
+                          <span className="flex items-center justify-center">
+                            {loading ? "Criando..." : "Criar conta"}
+                          </span>
                         </Button>
                       ) : (
                         <Button 

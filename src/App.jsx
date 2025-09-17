@@ -8,12 +8,23 @@ import LandingPage from './pages/LandingPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import NewLoginPage from './pages/NewLoginPage'
+import SimpleLoginPage from './pages/SimpleLoginPage'
+import AdminLoginPage from './pages/AdminLoginPage'
 import NewRegisterPage from './pages/NewRegisterPage'
 import CompanyDashboard from './pages/CompanyDashboard'
+import NewCompanyDashboard from './pages/NewCompanyDashboard'
 import DriverDashboard from './pages/DriverDashboard'
 import AdminDashboard from './pages/AdminDashboard'
 import FreightDetails from './pages/FreightDetails'
 import ProfilePage from './pages/ProfilePage'
+import MessagesPage from './pages/MessagesPage'
+
+// Páginas do Driver
+import DriverAvailableFreights from './pages/DriverAvailableFreights'
+import DriverMyFreights from './pages/DriverMyFreights'
+import DriverCapacity from './pages/DriverCapacity'
+import DriverMessages from './pages/DriverMessages'
+import DriverSettings from './pages/DriverSettings'
 
 // Componente de rota protegida
 const ProtectedRoute = ({ children, requiredUserType = null }) => {
@@ -45,7 +56,8 @@ function App() {
         <div className="App">
           <Routes>
             <Route path="/" element={<LandingPage />} />
-            <Route path="/login" element={<NewLoginPage />} />
+            <Route path="/login" element={<SimpleLoginPage />} />
+            <Route path="/admin-login" element={<AdminLoginPage />} />
             <Route path="/register" element={<NewRegisterPage />} />
             
             {/* Rotas antigas (manter por compatibilidade) */}
@@ -62,12 +74,115 @@ function App() {
               } 
             />
             
+            {/* Nova interface para empresas */}
+            <Route 
+              path="/company-dashboard/*" 
+              element={
+                <ProtectedRoute requiredUserType="company">
+                  <NewCompanyDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/publish" 
+              element={
+                <ProtectedRoute requiredUserType="company">
+                  <NewCompanyDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/freights" 
+              element={
+                <ProtectedRoute requiredUserType="company">
+                  <NewCompanyDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/tracking" 
+              element={
+                <ProtectedRoute requiredUserType="company">
+                  <NewCompanyDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/documents" 
+              element={
+                <ProtectedRoute requiredUserType="company">
+                  <NewCompanyDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/messages" 
+              element={
+                <ProtectedRoute requiredUserType="company">
+                  <NewCompanyDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/settings" 
+              element={
+                <ProtectedRoute requiredUserType="company">
+                  <NewCompanyDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            
             {/* Rotas protegidas para motoristas */}
             <Route 
               path="/driver/dashboard" 
               element={
                 <ProtectedRoute requiredUserType="driver">
                   <DriverDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/driver/available" 
+              element={
+                <ProtectedRoute requiredUserType="driver">
+                  <DriverAvailableFreights />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/driver/freights" 
+              element={
+                <ProtectedRoute requiredUserType="driver">
+                  <DriverMyFreights />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/driver/capacity" 
+              element={
+                <ProtectedRoute requiredUserType="driver">
+                  <DriverCapacity />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/driver/messages" 
+              element={
+                <ProtectedRoute requiredUserType="driver">
+                  <DriverMessages />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/driver/settings" 
+              element={
+                <ProtectedRoute requiredUserType="driver">
+                  <DriverSettings />
                 </ProtectedRoute>
               } 
             />

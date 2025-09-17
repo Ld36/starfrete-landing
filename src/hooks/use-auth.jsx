@@ -15,25 +15,17 @@ export const AuthProvider = ({ children }) => {
         
         if (token && userData) {
           try {
-            // Primeiro tenta usar os dados salvos
+            // Usar apenas os dados salvos localmente para evitar problemas na inicialização
             const parsedUserData = JSON.parse(userData);
             setUser(parsedUserData);
-            
-            // Só faz request ao servidor se necessário (opcional)
-            // Para melhor performance, removemos a validação automática
           } catch (parseError) {
-            console.error('Erro ao fazer parse dos dados do usuário:', parseError);
-            localStorage.removeItem('authToken');
             localStorage.removeItem('userData');
+            localStorage.removeItem('authToken');
           }
         }
       } catch (error) {
-        console.error('Auth initialization error:', error);
-        // Só remove token em caso de erro crítico
-        if (error.response && error.response.status === 401) {
-          localStorage.removeItem('authToken');
-          localStorage.removeItem('userData');
-        }
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userData');
       } finally {
         setIsLoading(false);
       }
@@ -44,14 +36,17 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (userData, token) => {
     localStorage.setItem('authToken', token);
-    localStorage.setItem('userData', JSON.stringify(userData));
     setUser(userData);
   };
 
   const logout = () => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('userData');
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
     setUser(null);
+    // Redirecionar para login
+    window.location.href = '/login';
   };
 
   const value = {
