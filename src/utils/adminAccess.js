@@ -36,6 +36,6 @@ window.adminAccess = function() {
   });
 };
 
-console.log('🔐 Comando admin carregado. Digite "adminAccess()" no console para acessar.');
+// Admin access loading complete
 
 export default window.adminAccess;

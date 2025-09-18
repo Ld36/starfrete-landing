@@ -1,31 +1,31 @@
 // Utilitário de debug para identificar e resolver problemas
 
 export const clearAllData = () => {
-  console.log('🧹 Limpando todos os dados da aplicação...');
+  // console.log('🧹 Limpando todos os dados da aplicação...');
   
   // Limpar localStorage
   const localStorageKeys = Object.keys(localStorage);
   localStorageKeys.forEach(key => {
     localStorage.removeItem(key);
-    console.log(`✅ Removido localStorage: ${key}`);
+    // console.log(`✅ Removido localStorage: ${key}`);
   });
   
   // Limpar sessionStorage
   const sessionStorageKeys = Object.keys(sessionStorage);
   sessionStorageKeys.forEach(key => {
     sessionStorage.removeItem(key);
-    console.log(`✅ Removido sessionStorage: ${key}`);
+    // console.log(`✅ Removido sessionStorage: ${key}`);
   });
   
-  console.log('✨ Limpeza concluída!');
+  // console.log('✨ Limpeza concluída!');
 };
 
 export const logUserData = () => {
-  console.log('🔍 Estado atual dos dados do usuário:');
-  console.log('localStorage authToken:', localStorage.getItem('authToken'));
-  console.log('localStorage userData:', localStorage.getItem('userData'));
-  console.log('sessionStorage keys:', Object.keys(sessionStorage));
-  console.log('localStorage keys:', Object.keys(localStorage));
+  // console.log('🔍 Estado atual dos dados do usuário:');
+  // console.log('localStorage authToken:', localStorage.getItem('authToken'));
+  // console.log('localStorage userData:', localStorage.getItem('userData'));
+  // console.log('sessionStorage keys:', Object.keys(sessionStorage));
+  // console.log('localStorage keys:', Object.keys(localStorage));
 };
 
 export const forceReloadWithCleanState = () => {

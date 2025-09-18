@@ -48,7 +48,7 @@ export default function DriverLayout({ children }) {
               <img 
                 src="/logo3.png" 
                 alt="StarFrete Logo" 
-                className="h-12 w-auto"
+                className="h-20 w-auto drop-shadow-md"
               />
               <span className="ml-2 text-xl font-bold text-primary">StarFrete</span>
             </Link>
@@ -94,7 +94,7 @@ export default function DriverLayout({ children }) {
                     <img 
                       src="/logo3.png" 
                       alt="StarFrete Logo" 
-                      className="h-12 w-auto"
+                      className="h-16 w-auto drop-shadow-md"
                     />
                     <span className="ml-2 text-xl font-bold text-primary">StarFrete</span>
                   </div>

@@ -96,7 +96,7 @@ export default function NewRegisterPage() {
     // Se chegou na página de registro, limpar dados locais
     localStorage.clear();
     sessionStorage.clear();
-    console.log('Sessão limpa ao acessar página de registro');
+    // Sessão limpa ao acessar página de registro
   }, []);
 
   // Redirect if user is already logged in (desabilitado enquanto testamos)
@@ -308,7 +308,7 @@ export default function NewRegisterPage() {
         };
       }
 
-      console.log("Dados de registro:", registerData);
+      // Dados de registro enviados
       
       let response;
       if (data.userType === "client") {
@@ -362,7 +362,7 @@ export default function NewRegisterPage() {
             <img
               src="/logo3.png"
               alt="StarFrete Logo"
-              className="h-8 w-auto"
+              className="h-20 w-auto drop-shadow-md"
             />
             <h1 className="text-2xl font-bold text-blue-600">StarFrete</h1>
           </div>

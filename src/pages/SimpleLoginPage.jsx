@@ -87,7 +87,7 @@ export default function SimpleLoginPage() {
             <img
               src="/logo3.png"
               alt="StarFrete Logo"
-              className="h-8 w-auto"
+              className="h-20 w-auto drop-shadow-md"
             />
             <h1 className="text-2xl font-bold text-blue-600">StarFrete</h1>
           </div>

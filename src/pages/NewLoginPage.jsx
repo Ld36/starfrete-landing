@@ -86,7 +86,7 @@ function NewLoginPageContent() {
       localStorage.removeItem('userData');
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
-      console.log('Sessão limpa por logout explícito');
+      // Sessão limpa por logout explícito
       // Limpar o parâmetro da URL
       window.history.replaceState({}, document.title, window.location.pathname);
     }
@@ -96,7 +96,7 @@ function NewLoginPageContent() {
   /*
   useEffect(() => {
     if (user) {
-      console.log("Usuário autenticado:", user);
+      // Usuário autenticado
       
       if (user.user_type === "company") {
         navigate("/company-dashboard");
@@ -219,7 +219,7 @@ function NewLoginPageContent() {
   const onRegisterSubmit = async (data) => {
     try {
       setLoading(true);
-      console.log("Dados de registro:", data);
+      // Dados de registro enviados
       
       // Aqui você implementaria a lógica de registro
       toast.success("Cadastro realizado com sucesso!");
@@ -241,7 +241,7 @@ function NewLoginPageContent() {
             <img
               src="/logo3.png"
               alt="StarFrete Logo"
-              className="h-8 w-auto"
+              className="h-20 w-auto drop-shadow-md"
             />
             <h1 className="text-2xl font-bold text-blue-600">StarFrete</h1>
           </div>
