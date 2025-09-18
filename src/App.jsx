@@ -5,6 +5,8 @@ import './App.css'
 
 // Páginas
 import LandingPage from './pages/LandingPage'
+import AboutPage from './pages/AboutPage'
+import BenefitsPage from './pages/BenefitsPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import NewLoginPage from './pages/NewLoginPage'
@@ -56,6 +58,8 @@ function App() {
         <div className="App">
           <Routes>
             <Route path="/" element={<LandingPage />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/benefits" element={<BenefitsPage />} />
             <Route path="/login" element={<SimpleLoginPage />} />
             <Route path="/admin-login" element={<AdminLoginPage />} />
             <Route path="/register" element={<NewRegisterPage />} />

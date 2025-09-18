@@ -71,12 +71,12 @@ export default function LandingPage() {
           </div>
 
           <nav className="hidden md:flex space-x-8">
-            <a href="#sobre" className="text-gray-600 hover:text-blue-600 font-medium transition-colors">
+            <Link to="/about" className="text-gray-600 hover:text-blue-600 font-medium transition-colors">
               Sobre
-            </a>
-            <a href="#beneficios" className="text-gray-600 hover:text-blue-600 font-medium transition-colors">
+            </Link>
+            <Link to="/benefits" className="text-gray-600 hover:text-blue-600 font-medium transition-colors">
               Benefícios
-            </a>
+            </Link>
             <a href="#servicos" className="text-gray-600 hover:text-blue-600 font-medium transition-colors">
               Serviços
             </a>
@@ -134,109 +134,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Seção Sobre */}
-      <section id="sobre" className="py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold mb-6 text-gray-800">Sobre a StarFrete</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-              A StarFrete nasceu da necessidade de modernizar e simplificar o setor de transporte de cargas no Brasil.
-              Nossa plataforma conecta empresas que precisam transportar mercadorias com motoristas e transportadores qualificados.
-            </p>
-          </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-16">
-            <div>
-              <h3 className="text-2xl font-bold mb-6 text-gray-800">Nossa Missão</h3>
-              <p className="text-gray-600 mb-6 leading-relaxed">
-                Democratizar o acesso ao transporte de cargas, oferecendo uma plataforma tecnológica que 
-                elimina intermediários desnecessários e conecta diretamente quem precisa transportar com 
-                quem tem capacidade de transporte.
-              </p>
-              <ul className="space-y-3">
-                <li className="flex items-start">
-                  <CheckCircle className="h-5 w-5 text-blue-500 mr-3 flex-shrink-0 mt-1" />
-                  <span className="text-gray-700">Transparência total nos processos e preços</span>
-                </li>
-                <li className="flex items-start">
-                  <CheckCircle className="h-5 w-5 text-blue-500 mr-3 flex-shrink-0 mt-1" />
-                  <span className="text-gray-700">Tecnologia avançada para otimização logística</span>
-                </li>
-                <li className="flex items-start">
-                  <CheckCircle className="h-5 w-5 text-blue-500 mr-3 flex-shrink-0 mt-1" />
-                  <span className="text-gray-700">Segurança e confiabilidade em todas as operações</span>
-                </li>
-                <li className="flex items-start">
-                  <CheckCircle className="h-5 w-5 text-blue-500 mr-3 flex-shrink-0 mt-1" />
-                  <span className="text-gray-700">Suporte 24/7 para todos os usuários</span>
-                </li>
-              </ul>
-            </div>
-            
-            <div className="bg-white p-8 rounded-2xl shadow-lg">
-              <div className="grid grid-cols-2 gap-8 text-center">
-                <div>
-                  <div className="text-4xl font-bold text-blue-600 mb-2">500+</div>
-                  <div className="text-gray-600">Empresas Cadastradas</div>
-                </div>
-                <div>
-                  <div className="text-4xl font-bold text-blue-600 mb-2">1200+</div>
-                  <div className="text-gray-600">Motoristas Ativos</div>
-                </div>
-                <div>
-                  <div className="text-4xl font-bold text-blue-600 mb-2">5000+</div>
-                  <div className="text-gray-600">Fretes Realizados</div>
-                </div>
-                <div>
-                  <div className="text-4xl font-bold text-blue-600 mb-2">98%</div>
-                  <div className="text-gray-600">Satisfação dos Clientes</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-blue-600 text-white rounded-2xl p-8 lg:p-12">
-            <div className="text-center mb-8">
-              <h3 className="text-2xl font-bold mb-4">Por que escolher a StarFrete?</h3>
-              <p className="text-blue-100 max-w-2xl mx-auto">
-                Somos mais que uma plataforma de fretes - somos seu parceiro estratégico para otimização logística.
-              </p>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="text-center">
-                <div className="bg-white/10 rounded-full p-4 inline-block mb-4">
-                  <Shield className="h-8 w-8 text-white" />
-                </div>
-                <h4 className="font-semibold mb-2">Segurança Garantida</h4>
-                <p className="text-blue-100 text-sm">
-                  Verificação rigorosa de documentos e histórico de todos os participantes.
-                </p>
-              </div>
-              
-              <div className="text-center">
-                <div className="bg-white/10 rounded-full p-4 inline-block mb-4">
-                  <Clock className="h-8 w-8 text-white" />
-                </div>
-                <h4 className="font-semibold mb-2">Agilidade</h4>
-                <p className="text-blue-100 text-sm">
-                  Encontre motoristas ou fretes em minutos, não em dias.
-                </p>
-              </div>
-              
-              <div className="text-center">
-                <div className="bg-white/10 rounded-full p-4 inline-block mb-4">
-                  <CreditCard className="h-8 w-8 text-white" />
-                </div>
-                <h4 className="font-semibold mb-2">Economia</h4>
-                <p className="text-blue-100 text-sm">
-                  Reduza custos eliminando intermediários e otimizando rotas.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
       <section id="recursos" className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4">
