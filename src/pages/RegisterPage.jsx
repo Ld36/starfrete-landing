@@ -2,6 +2,18 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom' 
 import axios from 'axios'
 import { API_BASE_URL } from '../config/api';
+import { 
+  validateEmail, 
+  validatePassword, 
+  validateCPF, 
+  validateCNPJ, 
+  validatePhone, 
+  validateCEP,
+  formatCPF,
+  formatCNPJ,
+  formatPhone,
+  formatCEP
+} from "../utils/validation.js";
 
 
 export default function RegisterPage() {
@@ -63,10 +75,50 @@ export default function RegisterPage() {
 
     const formData = getActiveFormData()
 
+    // Validações básicas
+    if (!validateEmail(formData.email)) {
+      setMessage('Email inválido')
+      setLoading(false)
+      return
+    }
+
+    if (!validatePassword(formData.password)) {
+      setMessage('A senha deve ter pelo menos 6 caracteres')
+      setLoading(false)
+      return
+    }
+
     if (formData.password !== formData.confirmPassword) {
       setMessage('As senhas não coincidem')
       setLoading(false)
       return
+    }
+
+    // Validações específicas por tipo
+    if (userType === 'driver') {
+      if (formData.driver.cpf && !validateCPF(formData.driver.cpf)) {
+        setMessage('CPF inválido')
+        setLoading(false)
+        return
+      }
+      
+      if (formData.driver.phone && !validatePhone(formData.driver.phone)) {
+        setMessage('Telefone inválido')
+        setLoading(false)
+        return
+      }
+    } else if (userType === 'company') {
+      if (formData.company.cnpj && !validateCNPJ(formData.company.cnpj)) {
+        setMessage('CNPJ inválido')
+        setLoading(false)
+        return
+      }
+      
+      if (formData.company.phone && !validatePhone(formData.company.phone)) {
+        setMessage('Telefone inválido')
+        setLoading(false)
+        return
+      }
     }
 
     try {
@@ -138,23 +190,21 @@ export default function RegisterPage() {
     }
   }
 
-  // Função de input atualizada para tratar limites e campos numéricos
+  // Função de input atualizada para aplicar máscaras e validações
   const handleInputChange = (e) => {
     const { name, value } = e.target
     let processedValue = value;
 
-    // Lista de campos que devem conter apenas números
-    const numericFields = [
-      'company.cnpj',
-      'driver.cpf',
-      'company.phone',
-      'driver.phone',
-      'driver.cnh'
-    ];
-
-    // Se o campo for numérico, remove todos os caracteres não-dígitos
-    if (numericFields.includes(name)) {
-      processedValue = value.replace(/\D/g, '');
+    // Aplicar máscaras específicas
+    if (name === 'company.cnpj') {
+      processedValue = formatCNPJ(value);
+    } else if (name === 'driver.cpf') {
+      processedValue = formatCPF(value);
+    } else if (name === 'company.phone' || name === 'driver.phone') {
+      processedValue = formatPhone(value);
+    } else if (name === 'driver.cnh') {
+      // CNH deve conter apenas números
+      processedValue = value.replace(/\D/g, '').substring(0, 11);
     }
     
     // Atualiza o estado correspondente
@@ -347,13 +397,12 @@ export default function RegisterPage() {
                   id="company.cnpj"
                   name="company.cnpj"
                   type="text"
-                  inputMode="numeric"
                   required
-                  maxLength="14"
+                  maxLength="18"
                   value={getActiveFormData().company.cnpj}
                   onChange={handleInputChange}
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Apenas números"
+                  placeholder="00.000.000/0000-00"
                 />
               </div>
 
@@ -365,13 +414,12 @@ export default function RegisterPage() {
                   id="company.phone"
                   name="company.phone"
                   type="tel"
-                  inputMode="numeric"
                   required
-                  maxLength="11"
+                  maxLength="15"
                   value={getActiveFormData().company.phone}
                   onChange={handleInputChange}
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Apenas números (DDD + número)"
+                  placeholder="(00) 00000-0000"
                 />
               </div>
 
@@ -424,13 +472,12 @@ export default function RegisterPage() {
                   id="driver.cpf"
                   name="driver.cpf"
                   type="text"
-                  inputMode="numeric"
                   required
-                  maxLength="11"
+                  maxLength="14"
                   value={getActiveFormData().driver.cpf}
                   onChange={handleInputChange}
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Apenas números"
+                  placeholder="000.000.000-00"
                 />
               </div>
 
@@ -442,13 +489,12 @@ export default function RegisterPage() {
                   id="driver.phone"
                   name="driver.phone"
                   type="tel"
-                  inputMode="numeric"
                   required
-                  maxLength="11"
+                  maxLength="15"
                   value={getActiveFormData().driver.phone}
                   onChange={handleInputChange}
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Apenas números (DDD + número)"
+                  placeholder="(00) 00000-0000"
                 />
               </div>
 

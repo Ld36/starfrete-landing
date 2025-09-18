@@ -113,7 +113,7 @@ export const useOptimizedData = (fetchFunctionOrConfig, options = {}) => {
           
           // Para timeouts, tentar novamente (exceto na última tentativa)
           if ((err.code === 'ECONNABORTED' || err.message.includes('timeout')) && attempt < maxRetries) {
-            console.log(`Tentativa ${attempt + 1} falhou por timeout, tentando novamente...`)
+            // console.log(`Tentativa ${attempt + 1} falhou por timeout, tentando novamente...`)
             // Aguardar um pouco antes da próxima tentativa
             await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)))
             continue
@@ -141,7 +141,7 @@ export const useOptimizedData = (fetchFunctionOrConfig, options = {}) => {
         
         cacheRef.current.error = errorMessage
         setError(errorMessage)
-        console.error('Erro na requisição:', err)
+        // console.error('Erro na requisição:', err)
       }
       return null
     } finally {
@@ -237,7 +237,7 @@ export const useOptimizedMultipleData = (fetchConfigs) => {
           return { key, data: result?.data?.data || result?.data || result, error: null }
         } catch (err) {
           if (err.name !== 'AbortError') {
-            console.error(`Erro ao carregar ${key}:`, err)
+            // console.error(`Erro ao carregar ${key}:`, err)
             return { key, data: null, error: err.message }
           }
           return { key, data: null, error: null }
@@ -257,7 +257,7 @@ export const useOptimizedMultipleData = (fetchConfigs) => {
       setStates(prev => ({ ...prev, ...newStates }))
       
     } catch (error) {
-      console.error('Erro no fetchAll:', error)
+      // console.error('Erro no fetchAll:', error)
     } finally {
       setGlobalLoading(false)
     }

@@ -31,7 +31,7 @@ const Chat = ({ isOpen, onClose, freightId, companyId, driverId }) => {
 
     return () => {
       if (socket) {
-        console.log('🔌 Desconectando WebSocket...');
+        // Desconectando WebSocket
         socket.disconnect();
         setSocket(null);
       }
@@ -45,7 +45,7 @@ const Chat = ({ isOpen, onClose, freightId, companyId, driverId }) => {
   const initializeChat = async () => {
     try {
       setIsLoading(true);
-      console.log('🚀 Iniciando chat:', { freightId, driverId, companyId });
+      // Iniciando chat
       
       // Criar room ID baseado na documentação
       const roomId = `freight_${freightId}_company_${companyId}_driver_${driverId}`;
@@ -95,11 +95,7 @@ const Chat = ({ isOpen, onClose, freightId, companyId, driverId }) => {
       return;
     }
     
-    console.log('🔌 Conectando WebSocket...', { 
-      roomId, 
-      baseURL: API_BASE_URL,
-      hasToken: !!token
-    });
+    // Conectando WebSocket
     
     try {
       // Configuração baseada na documentação
@@ -118,7 +114,7 @@ const Chat = ({ isOpen, onClose, freightId, companyId, driverId }) => {
 
       // Eventos de conexão
       newSocket.on('connect', () => {
-        console.log('✅ Conectado ao WebSocket');
+        // Conectado ao WebSocket
         setIsConnected(true);
         setIsLoading(false);
         
@@ -220,7 +216,7 @@ const Chat = ({ isOpen, onClose, freightId, companyId, driverId }) => {
     if (!newMessage.trim()) return;
 
     if (socket && isConnected) {
-      console.log('📤 Enviando mensagem:', newMessage);
+      // Enviando mensagem
       
       // Baseado na documentação
       socket.emit('send_message', {
